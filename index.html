@@ -1537,9 +1537,9 @@ function deleteBioEntry(id) {
         if (dayPlan && dayPlan.split) {
           const split = dayPlan.split;
           if (split === 'OFF') {
-            badge = `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-lg badge-OFF w-full text-center truncate mt-1 block shadow-2xs">OFF</span>`;
+            badge = `<span class="text-[9px] font-extrabold px-1 py-0.5 rounded-md badge-OFF w-full text-center mt-1 block">OFF</span>`;
           } else {
-            badge = `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-lg badge-${split} w-full text-center truncate mt-1 block shadow-2xs">Treino ${split}</span>`;
+            badge = `<span class="text-[10px] font-black px-1 py-0.5 rounded-md badge-${split} w-full text-center mt-1 block">Tr. ${split}</span>`;
           }
         }
 

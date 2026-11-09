@@ -1,0 +1,2636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PulseFit - Treinos & Bioimpedância</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#10B981">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PulseFit">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2246%22 fill=%22%2310B981%22/><path d=%22M32 20 h30 a22 22 0 0 1 0 44 H32 v26%22 fill=%22none%22 stroke=%22white%22 stroke-width=%2210%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/><path d=%22M64 42 h12%22 fill=%22none%22 stroke=%22white%22 stroke-width=%2210%22 stroke-linecap=%22round%22/><circle cx=%2232%22 cy=%2220%22 r=%226%22 fill=%22white%22/><circle cx=%2232%22 cy=%2290%22 r=%226%22 fill=%22white%22/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%2310B981%22/><path d=%22M32 20 h30 a22 22 0 0 1 0 44 H32 v26%22 fill=%22none%22 stroke=%22white%22 stroke-width=%2210%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/><path d=%22M64 42 h12%22 fill=%22none%22 stroke=%22white%22 stroke-width=%2210%22 stroke-linecap=%22round%22/><circle cx=%2232%22 cy=%2220%22 r=%226%22 fill=%22white%22/><circle cx=%2232%22 cy=%2290%22 r=%226%22 fill=%22white%22/></svg>">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#ECFDF5', 100: '#D1FAE5', 500: '#10B981', 600: '#059669', 700: '#047857', 800: '#065F46' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    .badge-A { background-color: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+    .badge-B { background-color: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+    .badge-C { background-color: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+    .badge-D { background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+    .badge-E { background-color: #FDF4FF; color: #86198F; border: 1px solid #F5D0FE; }
+    .badge-OFF { background-color: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; }
+    .safe-bottom { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)); }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .animate-pulse-ring { animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  </style>
+</head>
+
+<body class="bg-[#F8FAFC] text-slate-800 min-h-screen pb-28 select-none antialiased">
+  <!-- ================= TELA DE LOGIN / BLOQUEIO ================= -->
+  <div id="login-screen" class="fixed inset-0 z-[99999] bg-slate-900 flex flex-col items-center justify-center p-6 transition-opacity duration-500">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center space-y-5">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 mx-auto flex items-center justify-center text-white shadow-lg shadow-emerald-500/25">
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-extrabold text-slate-900">PulseFit Security</h2>
+        <p class="text-xs text-slate-500 mt-1">Insira a sua senha de acesso</p>
+      </div>
+      
+      <div class="space-y-3">
+        <input type="password" id="login-password-input" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-center font-bold tracking-widest text-slate-800" placeholder="••••">
+        <button onclick="checkAppLogin()" class="w-full py-3 px-4 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-2xl transition active:scale-95 shadow-md shadow-emerald-600/20">
+          Entrar no Aplicativo
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= TELA DE SPLASH / LOADING ================= -->
+  <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-between bg-gradient-to-b from-white via-slate-50 to-emerald-50/50 p-8 transition-opacity duration-700 ease-out">
+    <div class="w-full"></div>
+    <div class="flex flex-col items-center text-center">
+      <div class="relative flex items-center justify-center">
+        <div class="absolute w-28 h-28 rounded-full bg-emerald-400/20 animate-pulse-ring"></div>
+        <div class="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-xl shadow-emerald-500/25">
+          <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4h7a5 5 0 0 1 0 10H6v6"/>
+            <path d="M14 9h3"/>
+            <circle cx="6" cy="4" r="1.5" fill="currentColor"/>
+            <circle cx="6" cy="20" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mt-6">PulseFit</h1>
+      <p class="text-xs font-semibold text-emerald-600 tracking-wider uppercase mt-1">Treinos & Bioimpedância</p>
+    </div>
+    <div class="w-full max-w-xs flex flex-col items-center space-y-3 pb-6">
+      <div class="w-full bg-slate-200/80 h-1.5 rounded-full overflow-hidden">
+        <div id="splash-progress" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 rounded-full transition-all duration-300 ease-out"></div>
+      </div>
+      <span id="splash-status" class="text-[11px] font-medium text-slate-400">Carregando seus dados...</span>
+    </div>
+  </div>
+
+  <!-- Toast Notificações -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ================= MENU LATERAL ESQUERDO (DRAWER SIDEBAR) ================= -->
+  <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  
+  <aside id="sidebar-drawer" class="fixed top-0 bottom-0 left-0 z-50 w-72 sm:w-80 bg-white border-r border-slate-200 shadow-2xl transform -translate-x-full transition-transform duration-300 ease-out flex flex-col justify-between">
+    <!-- Topo da Barra Lateral -->
+    <div class="p-5 space-y-6 overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-xs">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 4h7a5 5 0 0 1 0 10H6v6"/>
+              <path d="M14 9h3"/>
+              <circle cx="6" cy="4" r="1.5" fill="currentColor"/>
+              <circle cx="6" cy="20" r="1.5" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-sm font-extrabold text-slate-900 leading-tight">PulseFit Menu</h2>
+            <p class="text-[10px] font-semibold text-slate-400">Composição & Saúde</p>
+          </div>
+        </div>
+        <button onclick="toggleSidebar(false)" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg">✕</button>
+      </div>
+
+      <!-- Links de Ação da Lateral -->
+      <nav class="space-y-1.5">
+        <button onclick="switchView('bio_history'); toggleSidebar(false);" class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/80 rounded-xl transition border border-emerald-200/60">
+          <span class="text-base">🧬</span>
+          <div class="text-left">
+            <span class="block text-slate-900 font-bold">Bioimpedância</span>
+            <span class="block text-[10px] text-emerald-600 font-medium">Histórico e Avaliações</span>
+          </div>
+        </button>
+
+        <button onclick="openConfigModal(); toggleSidebar(false);" class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition">
+          <span class="text-base">⚙️</span>
+          <div class="text-left">
+            <span class="block text-slate-800 font-bold">Configurar Google Sheets</span>
+            <span class="block text-[10px] text-slate-400">Conexão em nuvem e webhook</span>
+          </div>
+        </button>
+      </nav>
+
+      <!-- 1. Card de Bioimpedância -->
+      <div id="sidebar-latest-bio-card" class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
+        <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center justify-between">
+          <span>🧬 Última Bioimpedância</span>
+          <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold">Bio</span>
+        </span>
+        <div id="sidebar-latest-bio-content">
+          <p class="text-xs text-slate-500">Nenhuma medição importada ainda.</p>
+        </div>
+      </div>
+
+      <!-- 2. Card de Versionamento de Musculação -->
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1">
+            <span>🏋️</span> Musculação
+          </span>
+          <span id="sidebar-workout-version-badge" class="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">v1.0</span>
+        </div>
+        <div class="text-[11px] text-slate-600 space-y-0.5">
+          <p class="flex items-center justify-between">
+            <span class="text-slate-400 text-[10px]">Última alteração:</span>
+            <span id="sidebar-workout-last-update" class="font-bold text-slate-700">Inicial</span>
+          </p>
+          <p class="flex items-center justify-between">
+            <span class="text-slate-400 text-[10px]">Revisões:</span>
+            <span id="sidebar-workout-changes-count" class="font-semibold text-slate-600">0 edições</span>
+          </p>
+        </div>
+      </div>
+
+      
+
+      <!-- 4. Rodapé de Versão da Aplicação -->
+      <div class="p-2.5 bg-slate-100/70 rounded-xl text-center space-y-0.5 border border-slate-200/60">
+        <p class="text-[10px] font-bold text-slate-700">PulseFit Build v2.6.0</p>
+        <p id="sidebar-app-last-sync" class="text-[9px] text-slate-400 font-medium">Sincronização: Local</p>
+      </div>
+    </div>
+
+    <!-- Rodapé da Barra Lateral -->
+    <div class="p-4 border-t border-slate-100 text-center">
+      <p class="text-[10px] font-semibold text-slate-400">PulseFit • Sincronização Contínua</p>
+    </div>
+  </aside>
+
+  <!-- Cabeçalho Superior com Botão Hamburger -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <!-- BOTÃO MENU HAMBURGER (Abre a lateral esquerda) -->
+        <button onclick="toggleSidebar(true)" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition active:scale-95" title="Abrir Menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+          </svg>
+        </button>
+
+        <!-- NOVO LOGOTIPO (OPÇÃO 1: MONOGRAMA P DE PERFORMANCE) -->
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-sm shadow-emerald-500/20 shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4h7a5 5 0 0 1 0 10H6v6"/>
+            <path d="M14 9h3"/>
+            <circle cx="6" cy="4" r="1.5" fill="currentColor"/>
+            <circle cx="6" cy="20" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div>
+          <h1 class="text-base font-extrabold text-slate-900 leading-tight tracking-tight">PulseFit</h1>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Gestor de Treinos</p>
+            <span id="offline-queue-badge" class="hidden inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold" title="Fila offline pendente">
+              ⚡ <span id="offline-queue-count">0</span> pendentes
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ações topo: Streak (Chama Traçada SVG), Baixar da Planilha, Sincronizar (Nuvem com Upload) -->
+      <div class="flex items-center gap-2">
+        <!-- CONTADOR DE DIAS SEGUIDOS COM CHAMA TRAÇADA SVG (MODELO A) -->
+        <div id="header-streak-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50/90 text-amber-800 border border-amber-200/90 text-xs font-black shadow-2xs transition select-none" title="Sequência ininterrupta de treinos ativos">
+          <svg class="w-4 h-4 text-amber-600 fill-amber-500/20 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-1.63-1.07-2.35-1.6-3.76-.53-1.42.1-2.74.1-2.74s-1.85 1.15-2.5 2.5c-.8 1.67-.5 2.8-.5 4z"/>
+            <path d="M12 2c-4 4-6 7.5-6 11a6 6 0 0 0 12 0c0-3.5-2-7-6-11z"/>
+          </svg>
+          <span class="leading-none"><span id="streak-count-header">0</span>d</span>
+        </div>
+
+        
+        <!-- Botão Baixar dados da Planilha Google (Importação) -->
+        <button id="btn-pull-sheets" onclick="pullFromGoogleSheets()" class="p-2 text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition active:scale-95 shadow-2xs group flex items-center justify-center" title="Baixar dados da Planilha Google (Importação)">
+          <svg id="pull-spin-icon" class="w-4 h-4 text-slate-600 transition-transform group-active:scale-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+        </button>
+
+        <!-- Botão Sincronizar com Nuvem e Upload (MODELO A) -->
+        <button id="btn-sync-sheets" onclick="syncWithGoogleSheets()" class="relative p-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/90 rounded-xl transition active:scale-95 shadow-2xs group flex items-center justify-center" title="Sincronizar com a Nuvem (Google Sheets)">
+          <!-- Ícone Nuvem com Upload SVG -->
+          <svg class="w-5 h-5 text-emerald-600 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+            <path d="m8 17 4-4 4 4m-4-4v9"/>
+          </svg>
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+            <svg id="sync-spin-icon" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-4xl mx-auto px-4 py-5 space-y-6">
+
+    <!-- SEÇÃO 1: CALENDÁRIO -->
+    <section id="view-calendar" class="space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 id="calendar-title" class="text-base sm:text-lg font-bold text-slate-900 capitalize tracking-tight">--</h2>
+            <p class="text-xs text-slate-500">Selecione uma data para registrar seu treino</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="changeMonth(-1)" class="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition">◀</button>
+            <button onclick="goToCurrentMonth()" class="px-3 py-1 text-xs font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition">Hoje</button>
+            <button onclick="changeMonth(1)" class="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition">▶</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mt-3 mb-1 uppercase tracking-wider">
+          <span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span>
+        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
+      </div>
+
+      <!-- Detalhes do Dia Selecionado -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dia em Execução</span>
+            <h3 id="selected-day-label" class="text-base sm:text-lg font-bold text-slate-900">--</h3>
+          </div>
+          <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 overflow-x-auto">
+            <span class="text-xs font-semibold text-slate-500 px-1">Treino:</span>
+            <button class="split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600" data-split="A">A</button>
+            <button class="split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600" data-split="B">B</button>
+            <button class="split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600" data-split="C">C</button>
+            <button class="split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600" data-split="D">D</button>
+            <button class="split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600" data-split="E">E</button>
+            <button class="split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600" data-split="OFF">OFF</button>
+          </div>
+        </div>
+        <div id="day-exercises-container" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 2: VINCULAR DIAS DA SEMANA -->
+    <section id="view-routine" class="hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Grade de Vínculo Recorrente</h2>
+          <p class="text-xs text-slate-500">Defina o planejamento padrão de treinos para cada dia da semana.</p>
+        </div>
+        <div class="space-y-2.5 divide-y divide-slate-100" id="weekly-schedule-rows"></div>
+        <div class="pt-3 flex justify-end">
+          <button onclick="applyWeeklyScheduleToMonth()" class="px-4 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm shadow-emerald-600/20 active:scale-95">
+            Aplicar Grade ao Mês Atual
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 3: MONTAGEM DE TREINOS (FICHAS A a E) -->
+    <section id="view-workouts" class="hidden space-y-5">
+      <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
+        <button class="workout-tab-btn py-2 text-xs sm:text-sm font-bold rounded-xl border border-emerald-500 bg-emerald-50 text-emerald-700 transition" data-tab="A">Ficha A</button>
+        <button class="workout-tab-btn py-2 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition" data-tab="B">Ficha B</button>
+        <button class="workout-tab-btn py-2 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition" data-tab="C">Ficha C</button>
+        <button class="workout-tab-btn py-2 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition" data-tab="D">Ficha D</button>
+        <button class="workout-tab-btn py-2 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition" data-tab="E">Ficha E</button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div class="flex-1">
+            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Título do Grupo Muscular</label>
+            <input type="text" id="split-title-input" class="w-full text-base sm:text-lg font-bold text-slate-900 border-b border-slate-200 focus:border-brand-500 focus:outline-none py-1" placeholder="Ex: Peitoral e Tríceps">
+          </div>
+          <button onclick="openExerciseModal()" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm active:scale-95">
+            + Adicionar Exercício
+          </button>
+        </div>
+        <div id="workout-exercises-list" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 4: EVOLUÇÃO DE CARGAS -->
+    <section id="view-evolution" class="hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Sobrecarga Progressiva</h2>
+            <p class="text-xs text-slate-500">Curva histórica e recordes do exercício</p>
+          </div>
+          <div class="w-full sm:w-64">
+            <select id="select-evolution-exercise" onchange="renderEvolutionChart()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none focus:border-brand-500"></select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Recorde Pessoal</span>
+              <span class="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black">PR</span>
+            </div>
+            <p id="stat-max-load" class="text-lg font-black text-slate-900 mt-0.5">0 kg</p>
+          </div>
+          <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Última Carga</span>
+            <p id="stat-last-load" class="text-lg font-black text-slate-900 mt-0.5">0 kg</p>
+          </div>
+          <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Total Séries</span>
+            <p id="stat-total-sets" class="text-lg font-black text-slate-900 mt-0.5">0</p>
+          </div>
+          <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Progressão Total</span>
+            <p id="stat-growth" class="text-lg font-black text-emerald-600 mt-0.5">0%</p>
+          </div>
+        </div>
+
+        <div class="h-64 w-full relative pt-2">
+          <canvas id="chart-evolution"></canvas>
+        </div>
+
+        <div class="pt-3">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Registros de Treino</h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100/80 text-slate-600 font-semibold uppercase">
+                <tr>
+                  <th class="py-2.5 px-3">Data</th>
+                  <th class="py-2.5 px-3">Série</th>
+                  <th class="py-2.5 px-3">Carga (kg)</th>
+                  <th class="py-2.5 px-3">Reps</th>
+                  <th class="py-2.5 px-3">RPE</th>
+                  <th class="py-2.5 px-3">Volume (kg)</th>
+                </tr>
+              </thead>
+              <tbody id="evolution-table-body" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 5: HISTÓRICO DE BIOIMPEDÂNCIA (Aberta pelo Menu Lateral) -->
+    <section id="view-bio-history" class="hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Composição Corporal (Bioimpedância)</h2>
+            <p class="text-xs text-slate-500">Acompanhamento de peso, massa muscular e gordura</p>
+          </div>
+          <button onclick="openBioModal()" class="px-3 py-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-xs">
+            + Nova Importação
+          </button>
+        </div>
+
+        <!-- Cards de Resumo da Última Avaliação -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="bio-summary-cards">
+          <!-- Renderizado dinamicamente -->
+        </div>
+
+        <!-- Gráfico de Evolução Corporal -->
+        <div class="h-64 w-full relative pt-2">
+          <canvas id="chart-bio"></canvas>
+        </div>
+
+        <!-- Tabela do Histórico de Bioimpedâncias -->
+        <div class="pt-2">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Histórico de Consultas</h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100/80 text-slate-600 font-semibold uppercase">
+                <tr>
+                  <th class="py-2.5 px-3">Data</th>
+                  <th class="py-2.5 px-3">Peso (kg)</th>
+                  <th class="py-2.5 px-3">Massa M. (kg)</th>
+                  <th class="py-2.5 px-3">Gordura (%)</th>
+                  <th class="py-2.5 px-3">Massa G. (kg)</th>
+                  <th class="py-2.5 px-3">TMB (kcal)</th>
+                  <th class="py-2.5 px-3 text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="bio-table-body" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+      <!-- SEÇÃO 6: MÉTRICAS DE CORRIDA (AMAZFIT / STRAVA) -->
+        <!-- SEÇÃO 6: CALENDÁRIO & MÉTRICAS DE CORRIDA (AMAZFIT / STRAVA) -->
+    
+  </main>
+
+  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 shadow-lg safe-bottom">
+    <div class="max-w-md mx-auto px-4 py-2 flex items-center justify-around">
+      <button class="nav-tab-bottom flex flex-col items-center justify-center flex-1 py-1 transition group" data-view="calendar">
+        <div class="nav-icon-wrapper w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-200 bg-emerald-50 text-emerald-600 shadow-xs">
+          <svg class="w-5 h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <span class="nav-label text-[10px] font-bold mt-1 text-emerald-700">Calendário</span>
+      </button>
+
+      <button class="nav-tab-bottom flex flex-col items-center justify-center flex-1 py-1 transition group" data-view="routine">
+        <div class="nav-icon-wrapper w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-200 text-slate-400 group-hover:text-slate-600">
+          <svg class="w-5 h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        </div>
+        <span class="nav-label text-[10px] font-semibold mt-1 text-slate-400">Rotina</span>
+      </button>
+
+      <button class="nav-tab-bottom flex flex-col items-center justify-center flex-1 py-1 transition group" data-view="workouts">
+        <div class="nav-icon-wrapper w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-200 text-slate-400 group-hover:text-slate-600">
+          <svg class="w-5 h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+          </svg>
+        </div>
+        <span class="nav-label text-[10px] font-semibold mt-1 text-slate-400">Fichas</span>
+      </button>
+
+      <button class="nav-tab-bottom flex flex-col items-center justify-center flex-1 py-1 transition group" data-view="evolution">
+        <div class="nav-icon-wrapper w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-200 text-slate-400 group-hover:text-slate-600">
+          <svg class="w-5 h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+          </svg>
+        </div>
+        <span class="nav-label text-[10px] font-semibold mt-1 text-slate-400">Evolução</span>
+      </button>
+    </div>
+  </nav>
+
+      <!-- ================= MODAL DE SUCESSO EM PRIMEIRO PLANO COM BOTÃO OK ================= -->
+  <div id="modal-app-success" class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden select-text">
+    <div class="bg-white rounded-2xl border border-emerald-200 shadow-2xl w-full max-w-sm p-6 text-center space-y-4">
+      <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center shadow-sm shadow-emerald-500/20">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+
+      <div class="space-y-1.5">
+        <h3 id="modal-success-title" class="text-base font-extrabold text-slate-900">Importação Concluída!</h3>
+        <p id="modal-success-message" class="text-xs text-slate-600 leading-relaxed">Os dados da sua bioimpedância foram processados com sucesso.</p>
+      </div>
+
+      <div id="modal-success-details" class="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3 text-left space-y-1 text-xs text-slate-700 hidden">
+      </div>
+
+      <div class="pt-2">
+        <button onclick="closeAppSuccessModal()" class="w-full py-2.5 px-4 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition active:scale-95 shadow-md shadow-emerald-600/20">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE ERROS EM PRIMEIRO PLANO COM CÓPIA ================= -->
+  <div id="modal-app-error" class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden select-text">
+    <div class="bg-white rounded-2xl border border-rose-200 shadow-2xl w-full max-w-md p-5 space-y-4">
+      <div class="flex items-start justify-between gap-3 pb-3 border-b border-rose-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-xs">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 id="modal-error-title" class="text-sm font-extrabold text-slate-900 leading-tight">Falha na Aplicação</h3>
+            <p class="text-[10px] text-rose-600 font-semibold uppercase tracking-wider mt-0.5">Notificação em Primeiro Plano</p>
+          </div>
+        </div>
+        <button onclick="closeAppErrorModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition">✕</button>
+      </div>
+
+      <div class="space-y-2">
+        <p id="modal-error-summary" class="text-xs font-semibold text-slate-700 leading-relaxed"></p>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Detalhes Técnicos do Log</span>
+            <span class="text-[10px] text-slate-400 font-mono">PulseFit Debug</span>
+          </div>
+          <textarea id="modal-error-details" readonly rows="5" class="w-full p-2.5 text-[11px] font-mono bg-rose-50/70 border border-rose-200 rounded-xl text-rose-950 focus:outline-none resize-none leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100 gap-2">
+        <span id="modal-copy-feedback" class="text-[11px] font-bold text-emerald-600 hidden">✓ Copiado!</span>
+        <div class="flex items-center gap-2 ml-auto">
+          <button id="btn-copy-error" onclick="copyAppErrorDetails()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition active:scale-95 shadow-2xs">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+            </svg>
+            <span id="btn-copy-error-text">Copiar Erro</span>
+          </button>
+          <button onclick="closeAppErrorModal()" class="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition active:scale-95 shadow-xs">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE REGISTRO MANUAL DE BIOIMPEDÂNCIA ================= -->
+  <div id="modal-bio" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900">Registrar Bioimpedância</h3>
+          <p class="text-[11px] text-slate-500">Insira os dados da sua avaliação corporal manualmente</p>
+        </div>
+        <button onclick="closeBioModal()" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+
+      <!-- Campos de Preenchimento Manual -->
+      <div class="space-y-3 pt-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Dados da Medição</span>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="text-[11px] font-semibold text-slate-600 block mb-1">Data da Consulta</label>
+            <input type="date" id="bio-input-date" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-slate-600 block mb-1">Peso (kg)</label>
+            <input type="number" step="0.1" id="bio-input-weight" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" placeholder="Ex: 82.5">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-slate-600 block mb-1">Percentual de Gordura (%)</label>
+            <input type="number" step="0.1" id="bio-input-pbf" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" placeholder="Ex: 16.5">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-slate-600 block mb-1">Taxa Metabólica Basal (kcal)</label>
+            <input type="number" id="bio-input-bmr" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" placeholder="Ex: 1820">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-slate-600 block mb-1">Nível de Gordura Visceral</label>
+            <input type="number" step="1" id="bio-input-visceral" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" placeholder="Ex: 8">
+          </div>
+        </div>
+
+        <!-- Seção de Campos Personalizados Dinâmicos (Inclusão e ajuste automático) -->
+        <div class="pt-2 border-t border-slate-100 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Outros Dados / Métricas Extras</span>
+            <button onclick="addCustomBioField()" type="button" class="px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition">
+              + Adicionar Métrica
+            </button>
+          </div>
+          <div id="custom-bio-fields-container" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+        <button onclick="closeBioModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+        <button onclick="saveBioimpedanceEntry()" class="px-5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-xs">Salvar & Sincronizar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADICIONAR / EDITAR EXERCÍCIO -->
+  <div id="modal-exercise" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-sm p-5 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h3 id="modal-title" class="text-sm font-bold text-slate-900">Adicionar Exercício</h3>
+        <button onclick="closeExerciseModal()" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-600 block mb-1">Nome do Exercício</label>
+          <input type="text" id="modal-ex-name" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-500" placeholder="Ex: Supino Reto com Barra">
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-slate-600 block mb-1">Séries</label>
+            <input type="number" id="modal-ex-sets" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" value="4" min="1">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600 block mb-1">Reps</label>
+            <input type="number" id="modal-ex-reps" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" value="10" min="1">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600 block mb-1">Carga (kg)</label>
+            <input type="number" id="modal-ex-weight" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" value="60" step="0.5">
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeExerciseModal()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
+        <button onclick="saveExerciseModal()" class="px-4 py-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURAÇÃO GOOGLE SHEETS -->
+  <div id="modal-config" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-5 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h3 class="text-sm font-bold text-slate-900">Integração com Google Sheets</h3>
+        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div class="text-xs text-slate-600 space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-800 block mb-1">URL do Google Apps Script (/exec):</label>
+          <input type="url" id="sheets-webapp-url" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-500 font-mono" placeholder="https://script.google.com/macros/s/.../exec">
+          <p class="text-[10px] text-slate-400 mt-0.5">Sincroniza fichas, histórico de musculação e bioimpedância.</p>
+        </div>
+
+        
+
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeConfigModal()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Fechar</button>
+        <button onclick="saveSheetsConfig()" class="px-4 py-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm">Salvar Conexão</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT DA APLICAÇÃO -->
+  <script>
+    
+    // Senha padrão definida para o aplicativo (Pode alterar aqui se desejar)
+    const APP_SECURE_PASSWORD = "052900";
+
+    function checkAppLogin() {
+      const input = document.getElementById('login-password-input');
+      const loginScreen = document.getElementById('login-screen');
+      
+      if (!input || !loginScreen) return;
+
+      if (input.value === APP_SECURE_PASSWORD) {
+        sessionStorage.setItem('pulsefit_authenticated', 'true');
+        loginScreen.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => loginScreen.remove(), 500);
+      } else {
+        showToast("Senha incorreta!", "error");
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    const STORAGE_KEY = 'pulsefit_pwa_data';
+    const CONFIG_KEY = 'pulsefit_sheets_url';
+    const QUEUE_KEY = 'pulsefit_offline_queue';
+
+    const DEFAULT_APP_STATE = {
+      splits: {
+        A: {
+          name: "Peitoral & Tríceps",
+          exercises: [
+            { id: "e1", name: "Supino Reto com Barra", sets: 4, reps: 10, weight: 80 },
+            { id: "e2", name: "Supino Inclinado Halteres", sets: 3, reps: 12, weight: 26 },
+            { id: "e3", name: "Crucifixo na Polia", sets: 3, reps: 15, weight: 15 },
+            { id: "e4", name: "Tríceps Corda", sets: 4, reps: 12, weight: 25 }
+          ]
+        },
+        B: {
+          name: "Dorsais & Bíceps",
+          exercises: [
+            { id: "e5", name: "Puxada Frontal", sets: 4, reps: 10, weight: 70 },
+            { id: "e6", name: "Remada Curvada", sets: 4, reps: 8, weight: 75 },
+            { id: "e7", name: "Rosca Direta W", sets: 3, reps: 10, weight: 32 }
+          ]
+        },
+        C: {
+          name: "Pernas Completo",
+          exercises: [
+            { id: "e8", name: "Agachamento Livre", sets: 4, reps: 8, weight: 100 },
+            { id: "e9", name: "Leg Press 45°", sets: 4, reps: 12, weight: 240 },
+            { id: "e10", name: "Cadeira Extensora", sets: 3, reps: 15, weight: 55 }
+          ]
+        },
+        D: {
+          name: "Ombros & Trapézio",
+          exercises: [
+            { id: "e11", name: "Desenvolvimento com Halteres", sets: 4, reps: 10, weight: 24 },
+            { id: "e12", name: "Elevação Lateral", sets: 4, reps: 15, weight: 12 }
+          ]
+        },
+        E: {
+          name: "Braços & Core",
+          exercises: [
+            { id: "e13", name: "Tríceps Testa", sets: 3, reps: 10, weight: 34 },
+            { id: "e14", name: "Rosca Martelo", sets: 3, reps: 12, weight: 18 }
+          ]
+        }
+      },
+      weeklyRoutine: { 0: "OFF", 1: "A", 2: "B", 3: "OFF", 4: "C", 5: "D", 6: "E" },
+      schedule: {},
+      history: [],
+      // Histórico de Bioimpedância
+      bioimpedance: [
+        {
+          id: "b1",
+          date: "2026-09-15",
+          weight: 84.5,
+          pbf: 18.2,
+          bmr: 1790,
+          visceral: 9,
+          customFields: {}
+        },
+        {
+          id: "b2",
+          date: "2026-10-20",
+          weight: 83.2,
+          pbf: 16.4,
+          bmr: 1825,
+          visceral: 8,
+          customFields: {}
+        }
+      ]
+    };
+
+    let appData = loadLocalData();
+    let offlineQueue = loadOfflineQueue();
+    let currentDate = new Date();
+    let selectedDateStr = formatDateKey(new Date());
+    let activeSplitTab = 'A';
+    let chartInstance = null;
+    let bioChartInstance = null;
+    let editingExerciseId = null;
+
+    function runSplashScreen() {
+      const splash = document.getElementById('splash-screen');
+      const progress = document.getElementById('splash-progress');
+      const status = document.getElementById('splash-status');
+
+      setTimeout(() => { progress.style.width = '35%'; status.textContent = 'Carregando rotinas...'; }, 200);
+      setTimeout(() => { progress.style.width = '75%'; status.textContent = 'Calculando PRs e Bioimpedância...'; }, 600);
+      setTimeout(() => { progress.style.width = '100%'; status.textContent = 'Pronto!'; }, 1000);
+
+      setTimeout(() => {
+        splash.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => splash.remove(), 700);
+      }, 1200);
+    }
+
+    function loadLocalData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (!parsed.bioimpedance) parsed.bioimpedance = DEFAULT_APP_STATE.bioimpedance;
+          return parsed;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_APP_STATE));
+    }
+
+    function saveLocalData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      } catch (e) {
+        console.error(e);
+      }
+      renderSidebarLatestBio();
+    }
+
+    function loadOfflineQueue() {
+      try {
+        const raw = localStorage.getItem(QUEUE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.error(e);
+      }
+      return [];
+    }
+
+    function saveOfflineQueue() {
+      try {
+        localStorage.setItem(QUEUE_KEY, JSON.stringify(offlineQueue));
+      } catch (e) {
+        console.error(e);
+      }
+      updateQueueBadge();
+    }
+
+    function updateQueueBadge() {
+      const badge = document.getElementById('offline-queue-badge');
+      const countEl = document.getElementById('offline-queue-count');
+      if (!badge || !countEl) return;
+      if (offlineQueue.length > 0) {
+        badge.classList.remove('hidden');
+        countEl.textContent = offlineQueue.length;
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // ================= SISTEMA DE ERROS EM PRIMEIRO PLANO & CÓPIA =================
+    let lastErrorLogData = "";
+
+    function showAppErrorModal(title, summary, technicalDetails = null) {
+      const modal = document.getElementById('modal-app-error');
+      const titleEl = document.getElementById('modal-error-title');
+      const summaryEl = document.getElementById('modal-error-summary');
+      const detailsEl = document.getElementById('modal-error-details');
+      const feedbackEl = document.getElementById('modal-copy-feedback');
+      const copyBtnText = document.getElementById('btn-copy-error-text');
+
+      if (!modal) return;
+
+      const timestamp = new Date().toLocaleString('pt-BR');
+      const appVersion = appData?.workoutVersionTag || 'v1.0';
+      const userAgent = navigator.userAgent;
+
+      const fullLog = `[PulseFit Error Log - ${timestamp}]
+Origem: ${title || 'Erro na Aplicação'}
+Mensagem: ${summary || 'Falha de execução'}
+Versão do App: Build v2.6.0 (${appVersion})
+Online: ${navigator.onLine ? 'Sim' : 'Não'}
+${technicalDetails ? `Detalhes Técnicos:\n${typeof technicalDetails === 'object' ? JSON.stringify(technicalDetails, null, 2) : technicalDetails}\n` : ''}User Agent: ${userAgent}`;
+
+      lastErrorLogData = fullLog;
+
+      if (titleEl) titleEl.textContent = title || 'Falha na Aplicação';
+      if (summaryEl) summaryEl.textContent = summary || 'Ocorreu um erro durante a operação.';
+      if (detailsEl) detailsEl.value = fullLog;
+      if (feedbackEl) feedbackEl.classList.add('hidden');
+      if (copyBtnText) copyBtnText.textContent = "Copiar Erro";
+
+      modal.classList.remove('hidden');
+    }
+
+        function showSuccessModal(title, message, detailsHtml = null) {
+      const modal = document.getElementById('modal-app-success');
+      const titleEl = document.getElementById('modal-success-title');
+      const msgEl = document.getElementById('modal-success-message');
+      const detailsEl = document.getElementById('modal-success-details');
+
+      if (!modal) return;
+
+      if (titleEl) titleEl.textContent = title || 'Importação Concluída!';
+      if (msgEl) msgEl.textContent = message || 'Dados importados com sucesso.';
+
+      if (detailsEl) {
+        if (detailsHtml) {
+          detailsEl.innerHTML = detailsHtml;
+          detailsEl.classList.remove('hidden');
+        } else {
+          detailsEl.classList.add('hidden');
+        }
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeAppSuccessModal() {
+      const modal = document.getElementById('modal-app-success');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function closeAppErrorModal() {
+      const modal = document.getElementById('modal-app-error');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function copyAppErrorDetails() {
+      const textToCopy = lastErrorLogData || document.getElementById('modal-error-details')?.value || '';
+      const feedbackEl = document.getElementById('modal-copy-feedback');
+      const copyBtnText = document.getElementById('btn-copy-error-text');
+
+      const setSuccessState = () => {
+        if (feedbackEl) feedbackEl.classList.remove('hidden');
+        if (copyBtnText) copyBtnText.textContent = "Copiado!";
+        setTimeout(() => {
+          if (feedbackEl) feedbackEl.classList.add('hidden');
+          if (copyBtnText) copyBtnText.textContent = "Copiar Erro";
+        }, 2500);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy)
+          .then(setSuccessState)
+          .catch(() => fallbackCopy(textToCopy, setSuccessState));
+      } else {
+        fallbackCopy(textToCopy, setSuccessState);
+      }
+    }
+
+    function fallbackCopy(text, callback) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        if (callback) callback();
+      } catch (err) {
+        console.error("Falha ao copiar:", err);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    // Captura global de erros JavaScript não tratados
+    window.addEventListener('error', (event) => {
+      console.error("Unhandled JS Error:", event.error);
+      showAppErrorModal(
+        "Erro de Execução (JS Runtime)",
+        event.message || "Erro inesperado no script da aplicação.",
+        event.error?.stack || `${event.filename}:${event.lineno}:${event.colno}`
+      );
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error("Unhandled Promise Rejection:", event.reason);
+      showAppErrorModal(
+        "Falha Assíncrona (Promise Rejection)",
+        event.reason?.message || String(event.reason) || "Promessa rejeitada sem tratamento.",
+        event.reason?.stack || event.reason
+      );
+    });
+
+    function showToast(msg, type = 'success', technicalError = null) {
+      // Se for erro, dispara o modal em primeiro plano imediatamente com opção de cópia!
+      if (type === 'error') {
+        showAppErrorModal('Alerta / Erro', msg, technicalError);
+      }
+
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `px-3.5 py-2 rounded-xl text-xs font-semibold shadow-md border pointer-events-auto transition-all duration-300 translate-y-2 opacity-0 flex items-center gap-2 ${
+        type === 'success' ? 'bg-white border-emerald-300 text-emerald-800' : 'bg-white border-rose-300 text-rose-800'
+      }`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function formatDateKey(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatDateBr(key) {
+      const [y, m, d] = key.split('-');
+      const date = new Date(Number(y), Number(m) - 1, Number(d));
+      return date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    const monthNames = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+
+    // ================= MENU LATERAL / DRAWER =================
+        // ================= CONTROLE DE VERSÃO E TIMESTAMPS =================
+    function getFormattedTimestamp() {
+      const now = new Date();
+      const d = String(now.getDate()).padStart(2, '0');
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const y = now.getFullYear();
+      const h = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      return `${d}/${m}/${y} às ${h}:${min}`;
+    }
+
+    function bumpWorkoutVersion(actionDescription = "Alteração nas fichas") {
+      if (!appData.workoutVersionNumber) appData.workoutVersionNumber = 1;
+      if (!appData.workoutChangesCount) appData.workoutChangesCount = 0;
+
+      appData.workoutChangesCount++;
+      const major = Math.floor(appData.workoutVersionNumber);
+      const minor = appData.workoutChangesCount;
+      appData.workoutVersionTag = `v${major}.${minor}`;
+      appData.lastWorkoutUpdate = getFormattedTimestamp();
+
+      saveLocalData();
+      renderSidebarVersionInfo();
+    }
+
+    function bumpRunVersion() {
+      if (!appData.runVersionNumber) appData.runVersionNumber = 1;
+      if (!appData.runSyncCount) appData.runSyncCount = 0;
+
+      appData.runSyncCount++;
+      const major = Math.floor(appData.runVersionNumber);
+      const minor = appData.runSyncCount;
+      appData.runVersionTag = `v${major}.${minor}`;
+      appData.lastRunUpdate = getFormattedTimestamp();
+
+      saveLocalData();
+      renderSidebarVersionInfo();
+    }
+
+    function renderSidebarVersionInfo() {
+      const wBadge = document.getElementById('sidebar-workout-version-badge');
+      const wUpdate = document.getElementById('sidebar-workout-last-update');
+      const wCount = document.getElementById('sidebar-workout-changes-count');
+      if (wBadge) wBadge.textContent = appData.workoutVersionTag || 'v1.0';
+      if (wUpdate) wUpdate.textContent = appData.lastWorkoutUpdate || 'Inicial';
+      if (wCount) wCount.textContent = `${appData.workoutChangesCount || 0} edições`;
+
+      const rBadge = document.getElementById('sidebar-run-version-badge');
+      const rContent = document.getElementById('sidebar-latest-run-content');
+      if (rBadge) rBadge.textContent = appData.runVersionTag || 'v1.0';
+      if (rContent) {
+        const runs = (appData.runs || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (runs.length > 0) {
+          const lr = runs[0];
+          rContent.innerHTML = `
+            <p class="flex items-center justify-between">
+              <span class="text-slate-400 text-[10px]">Última sessão:</span>
+              <span class="font-bold text-slate-800">${lr.date}</span>
+            </p>
+            <p class="flex items-center justify-between">
+              <span class="text-slate-400 text-[10px]">Desempenho:</span>
+              <span class="font-bold text-[#FC5200]">${lr.distanceKm} km • ${lr.paceFormatted}</span>
+            </p>
+          `;
+        } else {
+          rContent.innerHTML = `<p class="text-xs text-slate-400">Nenhum treino de corrida registrado.</p>`;
+        }
+      }
+
+      const appSync = document.getElementById('sidebar-app-last-sync');
+      if (appSync) {
+        appSync.textContent = `Última sincronização: ${appData.lastAppSync || 'Local'}`;
+      }
+    }
+
+    function toggleSidebar(open) {
+      const drawer = document.getElementById('sidebar-drawer');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (!drawer || !backdrop) return;
+
+      if (open) {
+        drawer.classList.remove('-translate-x-full');
+        backdrop.classList.remove('opacity-0', 'pointer-events-none');
+        renderSidebarLatestBio();
+        renderSidebarVersionInfo();
+      } else {
+        drawer.classList.add('-translate-x-full');
+        backdrop.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+
+    function renderSidebarLatestBio() {
+      const container = document.getElementById('sidebar-latest-bio-content');
+      if (!container) return;
+
+      if (!appData.bioimpedance || appData.bioimpedance.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400">Nenhum exame cadastrado.</p>`;
+        return;
+      }
+
+      const latest = appData.bioimpedance.slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      container.innerHTML = `
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-slate-800">${latest.weight} kg</span>
+          <span class="text-[10px] text-slate-400">${latest.date}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-600 mt-1">
+          <span>Músculo: <b>${latest.smm}kg</b></span>
+          <span>Gordura: <b>${latest.pbf}%</b></span>
+        </div>
+      `;
+    }
+
+    
+    // ================= IMPORTAÇÃO VIA LINK (OPÇÃO B PROXY GOOGLE APPS SCRIPT) =================
+
+
+    // ================= PARSER DE BIOIMPEDÂNCIA VIA HTML =================
+
+
+    
+    // ================= CAMPOS PERSONALIZADOS DE BIOIMPEDÂNCIA =================
+    function addCustomBioField(fieldName = '', fieldValue = '') {
+      const container = document.getElementById('custom-bio-fields-container');
+      if (!container) return;
+
+      const rowId = `custom_field_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+      const row = document.createElement('div');
+      row.id = rowId;
+      row.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200';
+      row.innerHTML = `
+        <input type="text" placeholder="Nome da Métrica (Ex: Água, Osso)" class="custom-field-name flex-1 px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none font-semibold text-slate-800" value="${fieldName}">
+        <input type="text" placeholder="Valor (Ex: 45.5 L)" class="custom-field-val w-28 px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none font-bold text-slate-900" value="${fieldValue}">
+        <button onclick="document.getElementById('${rowId}').remove()" type="button" class="text-rose-500 hover:text-rose-700 p-1 text-xs font-bold" title="Remover campo">✕</button>
+      `;
+      container.appendChild(row);
+    }
+    
+    function openBioModal() {
+      document.getElementById('bio-input-date').value = formatDateKey(new Date());
+      document.getElementById('modal-bio').classList.remove('hidden');
+    }
+
+    function closeBioModal() {
+      document.getElementById('modal-bio').classList.add('hidden');
+    }
+
+    
+    function saveBioimpedanceEntry() {
+      const date = document.getElementById('bio-input-date').value;
+      const weight = parseFloat(document.getElementById('bio-input-weight').value);
+      const pbf = parseFloat(document.getElementById('bio-input-pbf').value) || 0;
+      const bmr = parseInt(document.getElementById('bio-input-bmr').value, 10) || 0;
+      const visceral = parseInt(document.getElementById('bio-input-visceral').value, 10) || 0;
+
+      if (!date || isNaN(weight)) {
+        showToast("Informe ao menos a data e o peso corporal.", "error");
+        return;
+      }
+
+      const customFields = {};
+      document.querySelectorAll('#custom-bio-fields-container > div').forEach(row => {
+        const nameInput = row.querySelector('.custom-field-name');
+        const valInput = row.querySelector('.custom-field-val');
+        if (nameInput && valInput && nameInput.value.trim()) {
+          customFields[nameInput.value.trim()] = valInput.value.trim();
+        }
+      });
+
+      const newEntry = {
+        id: `bio_${Date.now()}`,
+        date: date,
+        weight: weight,
+        pbf: pbf,
+        bmr: bmr,
+        visceral: visceral,
+        customFields: customFields
+      };
+
+      const existingIdx = appData.bioimpedance.findIndex(b => b.date === date);
+      if (existingIdx >= 0) {
+        appData.bioimpedance[existingIdx] = newEntry;
+      } else {
+        appData.bioimpedance.push(newEntry);
+      }
+
+      saveLocalData();
+      closeBioModal();
+      renderBioHistoryTab();
+
+      let customSummary = '';
+      if (Object.keys(customFields).length > 0) {
+        customSummary = '<div class="pt-1 mt-1 border-t border-emerald-100 text-[11px] text-slate-600 font-medium"><b>Outros:</b> ' + 
+          Object.entries(customFields).map(([k, v]) => `${k}: ${v}`).join(' • ') + '</div>';
+      }
+      const detailsHtml = `
+        <div class="flex items-center justify-between"><span class="text-slate-500">Data:</span> <b class="text-slate-900">${date}</b></div>
+        <div class="flex items-center justify-between"><span class="text-slate-500">Peso:</span> <b class="text-emerald-700 font-black">${weight} kg</b></div>
+        <div class="flex items-center justify-between"><span class="text-slate-500">% Gordura:</span> <b class="text-slate-900">${pbf}%</b></div>
+        <div class="flex items-center justify-between"><span class="text-slate-500">TMB:</span> <b class="text-slate-900">${bmr} kcal</b></div>
+        <div class="flex items-center justify-between"><span class="text-slate-500">Gordura Visceral:</span> <b class="text-slate-900">${visceral}</b></div>
+        ${customSummary}
+      `;
+      showSuccessModal("Bioimpedância Salva!", "A avaliação foi gravada com sucesso e sincronizada com a planilha.", detailsHtml);
+
+      queueOrSendSync({ action: 'log_bio', data: newEntry });
+    }
+
+function deleteBioEntry(id) {
+      appData.bioimpedance = appData.bioimpedance.filter(b => b.id !== id);
+      saveLocalData();
+      renderBioHistoryTab();
+      showToast("Avaliação removida.");
+    }
+
+    // ================= TELA DE HISTÓRICO DE BIOIMPEDÂNCIA =================
+    
+    function renderBioHistoryTab() {
+      const records = (appData.bioimpedance || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      const summaryCards = document.getElementById('bio-summary-cards');
+      const tbody = document.getElementById('bio-table-body');
+
+      if (records.length === 0) {
+        summaryCards.innerHTML = `
+          <div class="col-span-2 sm:col-span-4 p-6 bg-slate-50 rounded-xl text-center border border-dashed border-slate-200">
+            <p class="text-xs font-semibold text-slate-500">Nenhuma avaliação corporal registrada.</p>
+            <p class="text-[11px] text-slate-400 mt-1">Clique em "+ Nova Importação" para registar a sua primeira avaliação.</p>
+          </div>
+        `;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-slate-400 text-xs">Sem registros.</td></tr>`;
+        if (bioChartInstance) { bioChartInstance.destroy(); bioChartInstance = null; }
+        return;
+      }
+
+      const latest = records[records.length - 1];
+      const previous = records.length > 1 ? records[records.length - 2] : null;
+
+      function diffBadge(curr, prev, unit = '', reverseGood = false) {
+        if (!prev) return '';
+        const diff = (curr - prev).toFixed(1);
+        if (diff == 0) return '';
+        const isUp = diff > 0;
+        const color = (isUp !== reverseGood) ? 'text-emerald-600' : 'text-rose-600';
+        return `<span class="text-[10px] ${color} font-bold ml-1">${isUp ? '+' : ''}${diff}${unit}</span>`;
+      }
+
+      summaryCards.innerHTML = `
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">Peso</span>
+          <p class="text-lg font-black text-slate-900 mt-0.5">${latest.weight} kg ${diffBadge(latest.weight, previous?.weight, 'kg', true)}</p>
+        </div>
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">% Gordura</span>
+          <p class="text-lg font-black text-slate-900 mt-0.5">${latest.pbf}% ${diffBadge(latest.pbf, previous?.pbf, '%', true)}</p>
+        </div>
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">TMB Basal</span>
+          <p class="text-lg font-black text-slate-900 mt-0.5">${latest.bmr || '-'} kcal</p>
+        </div>
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">Gordura Visceral</span>
+          <p class="text-lg font-black text-slate-900 mt-0.5">${latest.visceral || '-'} ${diffBadge(latest.visceral, previous?.visceral, '', true)}</p>
+        </div>
+      `;
+
+      // Preenche tabela com colunas dinâmicas se houver campos customizados
+      tbody.innerHTML = '';
+      records.slice().reverse().forEach(b => {
+        let customExtrasStr = '';
+        if (b.customFields && Object.keys(b.customFields).length > 0) {
+          customExtrasStr = '<div class="text-[10px] text-slate-400 font-medium">' + Object.entries(b.customFields).map(([k,v]) => `${k}: ${v}`).join(' | ') + '</div>';
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="py-2.5 px-3 text-slate-600 font-semibold">${formatDateBr(b.date)}</td>
+          <td class="py-2.5 px-3 font-bold text-slate-900">${b.weight} kg</td>
+          <td class="py-2.5 px-3 text-slate-700">${b.pbf}%</td>
+          <td class="py-2.5 px-3 text-slate-500 font-mono">${b.bmr || '-'}</td>
+          <td class="py-2.5 px-3 font-bold text-slate-800">${b.visceral || '-'}</td>
+          <td class="py-2.5 px-3">${customExtrasStr || '<span class="text-slate-300">-</span>'}</td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="deleteBioEntry('${b.id}')" class="text-rose-500 hover:text-rose-700 p-1">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      // Atualizar o cabeçalho da tabela de histórico para refletir os 4 campos principais + Extras
+      const theadContainer = document.querySelector('#view-bio-history table thead tr');
+      if (theadContainer) {
+        theadContainer.innerHTML = `
+          <th class="py-2.5 px-3">Data</th>
+          <th class="py-2.5 px-3">Peso (kg)</th>
+          <th class="py-2.5 px-3">Gordura (%)</th>
+          <th class="py-2.5 px-3">TMB (kcal)</th>
+          <th class="py-2.5 px-3">Visceral</th>
+          <th class="py-2.5 px-3">Métricas Extras</th>
+          <th class="py-2.5 px-3 text-right">Ação</th>
+        `;
+      }
+
+      // Gráfico de Evolução Corporal ajustável (Peso, % Gordura, Visceral, TMB)
+      const labels = records.map(b => {
+        const parts = b.date.split('-');
+        return `${parts[2]}/${parts[1]}`;
+      });
+
+      const ctx = document.getElementById('chart-bio')?.getContext('2d');
+      if (!ctx) return;
+      if (bioChartInstance) bioChartInstance.destroy();
+
+      bioChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Peso (kg)',
+              data: records.map(b => b.weight),
+              borderColor: '#0284C7',
+              backgroundColor: 'rgba(2, 132, 199, 0.1)',
+              tension: 0.3,
+              borderWidth: 2.5
+            },
+            {
+              label: '% Gordura',
+              data: records.map(b => b.pbf),
+              borderColor: '#DC2626',
+              tension: 0.3,
+              borderWidth: 2
+            },
+            {
+              label: 'Gordura Visceral',
+              data: records.map(b => b.visceral),
+              borderColor: '#D97706',
+              tension: 0.3,
+              borderWidth: 2,
+              hidden: true
+            },
+            {
+              label: 'TMB (kcal / 10)',
+              data: records.map(b => b.bmr ? b.bmr / 10 : 0),
+              borderColor: '#059669',
+              borderDash: [4, 4],
+              tension: 0.3,
+              borderWidth: 2,
+              hidden: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true } },
+          scales: {
+            y: { grid: { color: '#F1F5F9' }, title: { display: true, text: 'Valores' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+
+    // ================= RECORDES (PR) & ÚLTIMA CARGA =================
+    function getPersonalRecord(exerciseName) {
+      const records = appData.history.filter(h => h.exerciseName === exerciseName);
+      if (records.length === 0) return 0;
+      return Math.max(...records.map(r => r.weight || 0));
+    }
+
+    function getLastSessionExerciseData(exerciseName) {
+      const pastEntries = appData.history
+        .filter(h => h.exerciseName === exerciseName && h.date < selectedDateStr)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (pastEntries.length > 0) {
+        return {
+          weight: pastEntries[0].weight,
+          reps: pastEntries[0].reps,
+          rpe: pastEntries[0].rpe || 8
+        };
+      }
+      return null;
+    }
+
+    function calculateStreak() {
+      const completedDates = new Set();
+      Object.keys(appData.schedule).forEach(dateStr => {
+        if (appData.schedule[dateStr]?.completed && appData.schedule[dateStr]?.split !== 'OFF') {
+          completedDates.add(dateStr);
+        }
+      });
+      appData.history.forEach(h => completedDates.add(h.date));
+
+      const sortedDates = Array.from(completedDates).sort().reverse();
+      if (sortedDates.length === 0) return 0;
+
+      let streak = 0;
+      let checkDate = new Date();
+      const todayKey = formatDateKey(checkDate);
+      if (!completedDates.has(todayKey)) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      while (true) {
+        const key = formatDateKey(checkDate);
+        const isOffScheduled = appData.schedule[key]?.split === 'OFF';
+
+        if (completedDates.has(key)) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else if (isOffScheduled) {
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function updateStreakDisplay() {
+      const streakCount = calculateStreak();
+      const headerStreak = document.getElementById('streak-count-header');
+      if (headerStreak) headerStreak.textContent = streakCount;
+    }
+
+    // ================= CALENDÁRIO =================
+    function renderCalendar() {
+      const y = currentDate.getFullYear();
+      const m = currentDate.getMonth();
+
+      document.getElementById('calendar-title').textContent = `${monthNames[m]} ${y}`;
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(y, m, 1).getDay();
+      const daysCount = new Date(y, m + 1, 0).getDate();
+      const prevDaysCount = new Date(y, m, 0).getDate();
+      const todayStr = formatDateKey(new Date());
+
+      for (let i = firstDay; i > 0; i--) {
+        const d = prevDaysCount - i + 1;
+        const cell = document.createElement('div');
+        cell.className = 'min-h-[64px] sm:min-h-[76px] p-1 rounded-xl border border-slate-100 bg-slate-50/40 text-slate-300 text-[11px] select-none';
+        cell.innerHTML = `<span>${d}</span>`;
+        grid.appendChild(cell);
+      }
+
+      for (let day = 1; day <= daysCount; day++) {
+        const dStr = String(day).padStart(2, '0');
+        const mStr = String(m + 1).padStart(2, '0');
+        const key = `${y}-${mStr}-${dStr}`;
+
+        const isToday = key === todayStr;
+        const isSelected = key === selectedDateStr;
+        const dayPlan = appData.schedule[key];
+
+        const cell = document.createElement('div');
+        cell.className = `min-h-[64px] sm:min-h-[76px] p-1.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
+          isSelected 
+            ? 'border-emerald-500 bg-emerald-50/70 shadow-xs ring-2 ring-emerald-500/20' 
+            : isToday 
+              ? 'border-slate-300 bg-slate-50 hover:bg-slate-100' 
+              : 'border-slate-200/80 bg-white hover:border-slate-300'
+        }`;
+
+        let topRow = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold ${isToday ? 'w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center -ml-0.5' : isSelected ? 'text-emerald-700' : 'text-slate-700'}">${day}</span>
+            ${dayPlan?.completed ? '<span class="text-[10px] text-emerald-600 font-bold">✓</span>' : ''}
+          </div>
+        `;
+
+        let badge = '';
+        if (dayPlan && dayPlan.split) {
+          const split = dayPlan.split;
+          badge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md badge-${split} self-start mt-1">${split === 'OFF' ? 'OFF' : `Treino ${split}`}</span>`;
+        }
+
+        // Verifica se houve corrida no dia (Amazfit / Strava)
+        let runBadge = '';
+        const runOnDay = (appData.runs || []).find(r => r.date === key);
+        if (runOnDay) {
+          runBadge = `<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-orange-100 text-[#FC5200] border border-orange-200 self-start mt-0.5 flex items-center gap-0.5">🏃 ${runOnDay.distanceKm}k • ${runOnDay.paceFormatted}</span>`;
+        }
+
+        cell.innerHTML = `${topRow}${badge}`;
+        cell.onclick = () => {
+          selectedDateStr = key;
+          renderCalendar();
+          renderSelectedDayPanel();
+        };
+
+        grid.appendChild(cell);
+      }
+
+      updateStreakDisplay();
+    }
+
+    function changeMonth(delta) {
+      currentDate.setMonth(currentDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function goToCurrentMonth() {
+      currentDate = new Date();
+      selectedDateStr = formatDateKey(new Date());
+      renderCalendar();
+      renderSelectedDayPanel();
+    }
+
+    // ================= PAINEL DO DIA SELECIONADO =================
+    function renderSelectedDayPanel() {
+      document.getElementById('selected-day-label').textContent = formatDateBr(selectedDateStr);
+
+      const dayPlan = appData.schedule[selectedDateStr];
+      const activeSplit = dayPlan?.split || null;
+
+      document.querySelectorAll('.split-select-btn').forEach(btn => {
+        const s = btn.getAttribute('data-split');
+        if (s === activeSplit) {
+          btn.className = 'split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-white bg-slate-900 shadow-xs';
+        } else {
+          btn.className = 'split-select-btn px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-200/60';
+        }
+      });
+
+      const container = document.getElementById('day-exercises-container');
+      container.innerHTML = '';
+
+      // Se houver corrida sincronizada nesta data, renderiza card de corrida no topo
+      
+
+      if (!activeSplit) {
+        container.innerHTML = `
+          <div class="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <p class="text-xs font-semibold text-slate-500">Nenhum treino vinculado a este dia.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Selecione uma das opções acima (A, B, C, D, E ou OFF).</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (activeSplit === 'OFF') {
+        container.innerHTML = `
+          <div class="text-center py-6 bg-slate-50 rounded-xl border border-slate-200">
+            <span class="text-2xl block mb-1">🛌</span>
+            <p class="text-xs font-bold text-slate-700">Dia de Descanso / Recuperação</p>
+          </div>
+        `;
+        return;
+      }
+
+      const splitObj = appData.splits[activeSplit];
+      if (!splitObj || !splitObj.exercises || splitObj.exercises.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 bg-slate-50 rounded-xl border border-slate-200">
+            <p class="text-xs font-semibold text-slate-500">A Ficha ${activeSplit} está vazia.</p>
+            <button onclick="switchView('workouts', '${activeSplit}')" class="mt-2 text-xs font-bold text-emerald-600 hover:underline">Montar Ficha ${activeSplit}</button>
+          </div>
+        `;
+        return;
+      }
+
+      splitObj.exercises.forEach((ex, idx) => {
+        const loggedToday = appData.history.filter(h => h.date === selectedDateStr && h.exerciseName === ex.name);
+        const lastSession = getLastSessionExerciseData(ex.name);
+        const personalRecord = getPersonalRecord(ex.name);
+
+        let defaultWeight = ex.weight;
+        let defaultReps = ex.reps;
+        let defaultRpe = 8;
+
+        if (loggedToday.length > 0) {
+          defaultWeight = loggedToday[loggedToday.length - 1].weight;
+          defaultReps = loggedToday[loggedToday.length - 1].reps;
+          defaultRpe = loggedToday[loggedToday.length - 1].rpe || 8;
+        } else if (lastSession) {
+          defaultWeight = lastSession.weight;
+          defaultReps = lastSession.reps;
+          defaultRpe = lastSession.rpe || 8;
+        }
+
+        const isCurrentPR = defaultWeight > 0 && defaultWeight >= personalRecord;
+
+        const card = document.createElement('div');
+        card.className = 'p-3.5 bg-slate-50/70 border border-slate-200/90 rounded-xl space-y-2.5';
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold text-slate-400">#${idx + 1}</span>
+              <div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <h4 class="text-xs sm:text-sm font-bold text-slate-900">${ex.name}</h4>
+                  ${isCurrentPR ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black tracking-wider">🏆 PR ${personalRecord}kg</span>` : (personalRecord > 0 ? `<span class="text-[10px] text-slate-400 font-semibold">(PR: ${personalRecord}kg)</span>` : '')}
+                </div>
+                ${lastSession && loggedToday.length === 0 ? `<p class="text-[10px] text-emerald-700 font-medium mt-0.5">Auto-preenchido da última sessão: ${lastSession.weight}kg x ${lastSession.reps}</p>` : ''}
+              </div>
+            </div>
+            <span class="text-[11px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 shrink-0">Meta: ${ex.sets}x ${ex.reps}</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/50">
+            <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 pl-1">KG</span>
+              <button onclick="stepInput('w-${idx}', -1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-xs font-bold">-</button>
+              <input type="number" step="0.5" id="w-${idx}" value="${defaultWeight}" class="w-12 text-center text-xs font-bold focus:outline-none">
+              <button onclick="stepInput('w-${idx}', 1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-xs font-bold">+</button>
+            </div>
+
+            <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 pl-1">REPS</span>
+              <button onclick="stepInput('r-${idx}', -1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-xs font-bold">-</button>
+              <input type="number" id="r-${idx}" value="${defaultReps}" class="w-10 text-center text-xs font-bold focus:outline-none">
+              <button onclick="stepInput('r-${idx}', 1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-xs font-bold">+</button>
+            </div>
+
+            <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 pl-1" title="Percepção Subjetiva de Esforço">RPE</span>
+              <select id="rpe-${idx}" class="text-xs font-bold text-slate-700 bg-transparent focus:outline-none pr-1">
+                <option value="6" ${defaultRpe === 6 ? 'selected' : ''}>6 (Leve)</option>
+                <option value="7" ${defaultRpe === 7 ? 'selected' : ''}>7 (3 sob)</option>
+                <option value="8" ${defaultRpe === 8 ? 'selected' : ''}>8 (2 sob)</option>
+                <option value="9" ${defaultRpe === 9 ? 'selected' : ''}>9 (1 sob)</option>
+                <option value="10" ${defaultRpe === 10 ? 'selected' : ''}>10 (Falha)</option>
+              </select>
+            </div>
+
+            <button onclick="logSet('${ex.name}', ${idx}, ${ex.sets})" class="ml-auto px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition active:scale-95 flex items-center gap-1 shadow-xs">
+              <span>Registrar</span>
+              <span class="text-[10px] bg-emerald-800/40 px-1 py-0.2 rounded font-mono">(${loggedToday.length}/${ex.sets})</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function stepInput(id, delta) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let val = parseFloat(el.value) || 0;
+      el.value = Math.max(0, val + delta);
+    }
+
+    function logSet(exerciseName, idx, totalSets) {
+      const weight = parseFloat(document.getElementById(`w-${idx}`).value) || 0;
+      const reps = parseInt(document.getElementById(`r-${idx}`).value, 10) || 0;
+      const rpe = parseInt(document.getElementById(`rpe-${idx}`).value, 10) || 8;
+
+      const loggedSets = appData.history.filter(h => h.date === selectedDateStr && h.exerciseName === exerciseName);
+      const nextSet = loggedSets.length + 1;
+      const prevPR = getPersonalRecord(exerciseName);
+
+      const newEntry = {
+        date: selectedDateStr,
+        exerciseName: exerciseName,
+        setNumber: nextSet,
+        weight: weight,
+        reps: reps,
+        rpe: rpe
+      };
+
+      appData.history.push(newEntry);
+
+      if (appData.schedule[selectedDateStr]) {
+        appData.schedule[selectedDateStr].completed = true;
+      }
+
+      saveLocalData();
+      renderSelectedDayPanel();
+      renderCalendar();
+
+      if (weight > prevPR && prevPR > 0) {
+        showToast(`🏆 NOVO RECORDE PESSOAL (PR)! ${weight}kg em ${exerciseName}!`);
+      } else {
+        showToast(`Série ${nextSet} de "${exerciseName}" registrada! (${weight}kg x ${reps} | RPE ${rpe})`);
+      }
+
+      queueOrSendSync({ action: 'log_set', data: newEntry });
+    }
+
+    // ================= ROTINA SEMANAL =================
+    const weekDaysNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+
+    function renderWeeklySchedule() {
+      const container = document.getElementById('weekly-schedule-rows');
+      container.innerHTML = '';
+
+      weekDaysNames.forEach((name, dayIndex) => {
+        const assigned = appData.weeklyRoutine[dayIndex] || "OFF";
+        const row = document.createElement('div');
+        row.className = 'pt-2.5 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2';
+        row.innerHTML = `
+          <span class="text-xs sm:text-sm font-semibold text-slate-800">${name}</span>
+          <div class="flex items-center gap-1">
+            ${['A', 'B', 'C', 'D', 'E', 'OFF'].map(split => `
+              <button onclick="setWeeklyDay(${dayIndex}, '${split}')" class="px-2.5 py-1 text-xs font-bold rounded-lg border transition ${
+                assigned === split 
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-2xs' 
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }">${split}</button>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function setWeeklyDay(dayIndex, split) {
+      appData.weeklyRoutine[dayIndex] = split;
+      saveLocalData();
+      renderWeeklySchedule();
+      showToast(`Rotina atualizada para ${weekDaysNames[dayIndex]}: Treino ${split}`);
+    }
+
+    function applyWeeklyScheduleToMonth() {
+      const y = currentDate.getFullYear();
+      const m = currentDate.getMonth();
+      const daysCount = new Date(y, m + 1, 0).getDate();
+
+      for (let d = 1; d <= daysCount; d++) {
+        const dateObj = new Date(y, m, d);
+        const dayOfWeek = dateObj.getDay();
+        const split = appData.weeklyRoutine[dayOfWeek] || "OFF";
+        const key = formatDateKey(dateObj);
+
+        if (!appData.schedule[key]) {
+          appData.schedule[key] = { split: split, completed: false };
+        } else {
+          appData.schedule[key].split = split;
+        }
+      }
+
+      saveLocalData();
+      renderCalendar();
+      renderSelectedDayPanel();
+      showToast("Rotina semanal vinculada a todos os dias do mês!");
+    }
+
+    // ================= MONTAGEM DE TREINOS =================
+    function renderWorkoutsTab() {
+      document.querySelectorAll('.workout-tab-btn').forEach(btn => {
+        const t = btn.getAttribute('data-tab');
+        if (t === activeSplitTab) {
+          btn.className = 'workout-tab-btn py-2 text-xs sm:text-sm font-bold rounded-xl border border-emerald-500 bg-emerald-50 text-emerald-700 shadow-2xs';
+        } else {
+          btn.className = 'workout-tab-btn py-2 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50';
+        }
+      });
+
+      const currentSplit = appData.splits[activeSplitTab] || { name: '', exercises: [] };
+      document.getElementById('split-title-input').value = currentSplit.name || '';
+
+      const list = document.getElementById('workout-exercises-list');
+      list.innerHTML = '';
+
+      if (currentSplit.exercises.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <p class="text-xs font-semibold text-slate-500">Nenhum exercício montado nesta divisão.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Clique em "+ Adicionar Exercício" acima.</p>
+          </div>
+        `;
+        return;
+      }
+
+      currentSplit.exercises.forEach((ex, idx) => {
+        const personalRecord = getPersonalRecord(ex.name);
+        const card = document.createElement('div');
+        card.className = 'flex items-center justify-between p-3 bg-slate-50/80 border border-slate-200/90 rounded-xl';
+        card.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center">${idx + 1}</span>
+            <div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900">${ex.name}</h4>
+                ${personalRecord > 0 ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black">PR ${personalRecord}kg</span>` : ''}
+              </div>
+              <p class="text-[11px] text-slate-500 font-medium">${ex.sets} séries • ${ex.reps} reps • ${ex.weight} kg</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="openExerciseModal('${ex.id}')" class="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200/60 transition" title="Editar">✏️</button>
+            <button onclick="deleteExercise('${ex.id}')" class="p-1.5 text-rose-500 hover:text-rose-700 rounded-lg hover:bg-rose-50 transition" title="Excluir">🗑️</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function openExerciseModal(id = null) {
+      editingExerciseId = id;
+      const modal = document.getElementById('modal-exercise');
+      const title = document.getElementById('modal-title');
+      const name = document.getElementById('modal-ex-name');
+      const sets = document.getElementById('modal-ex-sets');
+      const reps = document.getElementById('modal-ex-reps');
+      const weight = document.getElementById('modal-ex-weight');
+
+      if (id) {
+        title.textContent = 'Editar Exercício';
+        const ex = appData.splits[activeSplitTab].exercises.find(e => e.id === id);
+        if (ex) {
+          name.value = ex.name;
+          sets.value = ex.sets;
+          reps.value = ex.reps;
+          weight.value = ex.weight;
+        }
+      } else {
+        title.textContent = 'Novo Exercício';
+        name.value = '';
+        sets.value = 4;
+        reps.value = 10;
+        weight.value = 50;
+      }
+
+      modal.classList.remove('hidden');
+      name.focus();
+    }
+
+    function closeExerciseModal() {
+      document.getElementById('modal-exercise').classList.add('hidden');
+      editingExerciseId = null;
+    }
+
+    function saveExerciseModal() {
+      const name = document.getElementById('modal-ex-name').value.trim();
+      const sets = parseInt(document.getElementById('modal-ex-sets').value, 10) || 3;
+      const reps = parseInt(document.getElementById('modal-ex-reps').value, 10) || 10;
+      const weight = parseFloat(document.getElementById('modal-ex-weight').value) || 0;
+
+      if (!name) {
+        showToast("Informe o nome do exercício", "error");
+        return;
+      }
+
+      if (editingExerciseId) {
+        const ex = appData.splits[activeSplitTab].exercises.find(e => e.id === editingExerciseId);
+        if (ex) {
+          ex.name = name;
+          ex.sets = sets;
+          ex.reps = reps;
+          ex.weight = weight;
+        }
+      } else {
+        appData.splits[activeSplitTab].exercises.push({
+          id: `ex_${Date.now()}`,
+          name: name,
+          sets: sets,
+          reps: reps,
+          weight: weight
+        });
+      }
+
+      saveLocalData();
+      closeExerciseModal();
+      renderWorkoutsTab();
+      renderSelectedDayPanel();
+      bumpWorkoutVersion("Exercício salvo");
+      showToast("Exercício salvo com sucesso!");
+    }
+
+    function deleteExercise(id) {
+      appData.splits[activeSplitTab].exercises = appData.splits[activeSplitTab].exercises.filter(e => e.id !== id);
+      saveLocalData();
+      renderWorkoutsTab();
+      renderSelectedDayPanel();
+      bumpWorkoutVersion("Exercício excluído");
+      showToast("Exercício removido.");
+    }
+
+    // ================= EVOLUÇÃO DAS CARGAS =================
+    function getDistinctExercises() {
+      const set = new Set();
+      appData.history.forEach(h => set.add(h.exerciseName));
+      Object.values(appData.splits).forEach(s => s.exercises.forEach(e => set.add(e.name)));
+      return Array.from(set).sort();
+    }
+
+    function renderEvolutionTab() {
+      const select = document.getElementById('select-evolution-exercise');
+      const list = getDistinctExercises();
+      const cur = select.value;
+
+      select.innerHTML = '';
+      list.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+
+      if (list.includes(cur)) {
+        select.value = cur;
+      } else if (list.length > 0) {
+        select.value = list[0];
+      }
+
+      renderEvolutionChart();
+    }
+
+    function renderEvolutionChart() {
+      const select = document.getElementById('select-evolution-exercise');
+      const exName = select.value;
+      const records = appData.history.filter(h => h.exerciseName === exName).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const maxLoadEl = document.getElementById('stat-max-load');
+      const lastLoadEl = document.getElementById('stat-last-load');
+      const setsEl = document.getElementById('stat-total-sets');
+      const growthEl = document.getElementById('stat-growth');
+      const tbody = document.getElementById('evolution-table-body');
+
+      if (records.length === 0) {
+        maxLoadEl.textContent = '0 kg';
+        lastLoadEl.textContent = '0 kg';
+        setsEl.textContent = '0';
+        growthEl.textContent = '0%';
+        tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400 text-xs">Nenhuma série registrada para este exercício.</td></tr>`;
+        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+        return;
+      }
+
+      const weights = records.map(r => r.weight);
+      const maxW = Math.max(...weights);
+      const firstW = records[0].weight;
+      const lastW = records[records.length - 1].weight;
+      const diff = firstW > 0 ? (((lastW - firstW) / firstW) * 100).toFixed(1) : 0;
+
+      maxLoadEl.textContent = `${maxW} kg`;
+      lastLoadEl.textContent = `${lastW} kg`;
+      setsEl.textContent = String(records.length);
+      growthEl.textContent = `${diff >= 0 ? '+' : ''}${diff}%`;
+      growthEl.className = `text-lg font-black mt-0.5 ${diff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+      tbody.innerHTML = '';
+      records.slice().reverse().forEach(r => {
+        const isPRSet = r.weight === maxW;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="py-2 px-3 text-slate-500">${r.date}</td>
+          <td class="py-2 px-3 font-semibold text-slate-700">Série ${r.setNumber}</td>
+          <td class="py-2 px-3 font-bold text-slate-900 flex items-center gap-1">
+            ${r.weight} kg
+            ${isPRSet ? '<span class="px-1 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px] font-black">PR</span>' : ''}
+          </td>
+          <td class="py-2 px-3 text-slate-600">${r.reps}</td>
+          <td class="py-2 px-3 text-slate-600 font-semibold">${r.rpe || '-'}</td>
+          <td class="py-2 px-3 text-slate-400 font-mono">${(r.weight * r.reps).toFixed(0)} kg</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      const dailyMax = {};
+      records.forEach(r => {
+        if (!dailyMax[r.date] || r.weight > dailyMax[r.date]) {
+          dailyMax[r.date] = r.weight;
+        }
+      });
+
+      const labels = Object.keys(dailyMax).sort().map(d => {
+        const p = d.split('-');
+        return `${p[2]}/${p[1]}`;
+      });
+      const values = Object.keys(dailyMax).sort().map(d => dailyMax[d]);
+
+      const ctx = document.getElementById('chart-evolution')?.getContext('2d');
+      if (!ctx) return;
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `Carga Máxima (kg) - ${exName}`,
+            data: values,
+            borderColor: '#059669',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: values.map(v => v === maxW ? '#F59E0B' : '#059669'),
+            pointRadius: values.map(v => v === maxW ? 6 : 4),
+            borderWidth: 2.5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true } },
+          scales: {
+            y: { grid: { color: '#F1F5F9' }, ticks: { color: '#64748B' } },
+            x: { grid: { display: false }, ticks: { color: '#64748B' } }
+          }
+        }
+      });
+    }
+
+    // ================= FILA OFFLINE & GOOGLE SHEETS COM SUPORTE A BIOIMPEDÂNCIA =================
+    
+    // ================= ROTINAS DE CORRIDA E STRAVA API =================
+    
+    let runsChartInstance = null;
+
+
+
+
+
+    async function syncStravaRuns() {
+      const endpoint = localStorage.getItem(CONFIG_KEY);
+      
+
+      if (!endpoint) {
+        showToast("Configure a URL do Google Sheets nas configurações primeiro.", "error");
+        openConfigModal();
+        return;
+      }
+
+      if (!stravaCfg.clientId || !stravaCfg.clientSecret || !stravaCfg.refreshToken) {
+        showToast("Preencha as chaves da API do Strava nas configurações para sincronizar.", "error");
+        openConfigModal();
+        return;
+      }
+
+      const spinBadge = document.getElementById('strava-spin-badge');
+      if (spinBadge) spinBadge.classList.remove('hidden');
+
+      showToast("Buscando corridas recentes do Amazfit / Strava...");
+
+      try {
+        const separator = endpoint.includes('?') ? '&' : '?';
+        const reqUrl = `${endpoint}${separator}action=sync_strava&client_id=${encodeURIComponent(stravaCfg.clientId)}&client_secret=${encodeURIComponent(stravaCfg.clientSecret)}&refresh_token=${encodeURIComponent(stravaCfg.refreshToken)}`;
+        
+        const res = await fetch(reqUrl);
+        const result = await res.json();
+
+        if (result && result.status === 'success' && result.data) {
+          appData.runs = result.data.runs || [];
+          saveLocalData();
+          renderCalendar();
+          renderSelectedDayPanel();
+          renderRunsCalendar();
+          renderRunsHistoryTab();
+          bumpRunVersion();
+          showToast(`Sincronizado! ${result.data.newRunsCount || 0} nova(s) corrida(s) do T-Rex 3 Pro registradas.`);
+        } else {
+          showToast(result?.error || "Falha na sincronização do Strava. Verifique as credenciais.", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Erro ao contatar o Google Apps Script para o Strava.", "error", err?.stack || err);
+      } finally {
+        if (spinBadge) spinBadge.classList.add('hidden');
+      }
+    }
+
+    
+    function deleteRunEntry(runId) {
+      if (!confirm("Deseja realmente excluir este registro de corrida?")) return;
+
+      const runToDelete = (appData.runs || []).find(r => r.id === runId);
+      appData.runs = (appData.runs || []).filter(r => r.id !== runId);
+
+      saveLocalData();
+      renderCalendar();
+      renderSelectedDayPanel();
+      renderRunsCalendar();
+      renderRunsHistoryTab();
+      bumpRunVersion();
+      showToast("Corrida removida do aplicativo com sucesso!");
+
+      // Envia notificação para remoção na planilha Google
+      queueOrSendSync({
+        action: 'delete_run',
+        data: { id: runId, date: runToDelete ? runToDelete.date : '' }
+      });
+    }
+
+    
+    // ================= CALENDÁRIO EXCLUSIVO DE CORRIDAS (AMAZFIT / STRAVA) =================
+    let currentRunsDate = new Date();
+    let selectedRunDateStr = formatDateKey(new Date());
+
+    function renderRunsCalendar() {
+      const y = currentRunsDate.getFullYear();
+      const m = currentRunsDate.getMonth();
+
+      const titleEl = document.getElementById('runs-calendar-title');
+      if (titleEl) titleEl.textContent = `${monthNames[m]} ${y}`;
+
+      const grid = document.getElementById('runs-calendar-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const firstDay = new Date(y, m, 1).getDay();
+      const daysCount = new Date(y, m + 1, 0).getDate();
+      const prevDaysCount = new Date(y, m, 0).getDate();
+      const todayStr = formatDateKey(new Date());
+
+      // Dias vazios do mês anterior
+      for (let i = firstDay; i > 0; i--) {
+        const d = prevDaysCount - i + 1;
+        const cell = document.createElement('div');
+        cell.className = 'min-h-[68px] sm:min-h-[82px] p-1 rounded-xl border border-slate-100 bg-slate-50/40 text-slate-300 text-[11px] select-none';
+        cell.innerHTML = `<span>${d}</span>`;
+        grid.appendChild(cell);
+      }
+
+      // Dias do mês atual
+      for (let day = 1; day <= daysCount; day++) {
+        const dStr = String(day).padStart(2, '0');
+        const mStr = String(m + 1).padStart(2, '0');
+        const key = `${y}-${mStr}-${dStr}`;
+
+        const isToday = key === todayStr;
+        const isSelected = key === selectedRunDateStr;
+        const runOnDay = (appData.runs || []).find(r => r.date === key);
+
+        const cell = document.createElement('div');
+        cell.className = `min-h-[68px] sm:min-h-[82px] p-1.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
+          isSelected 
+            ? 'border-[#FC5200] bg-orange-50/80 shadow-xs ring-2 ring-orange-400/30' 
+            : runOnDay
+              ? 'border-orange-300 bg-orange-50/50 hover:bg-orange-100/60'
+              : isToday 
+                ? 'border-slate-300 bg-slate-50 hover:bg-slate-100' 
+                : 'border-slate-200/80 bg-white hover:border-slate-300'
+        }`;
+
+        let topRow = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold ${isToday ? 'w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center -ml-0.5' : isSelected ? 'text-orange-700' : 'text-slate-700'}">${day}</span>
+            ${runOnDay ? '<span class="text-[10px] text-[#FC5200] font-black">🏃</span>' : ''}
+          </div>
+        `;
+
+        let runBadge = '';
+        if (runOnDay) {
+          runBadge = `
+            <div class="mt-1 p-1 rounded-lg bg-white/95 border border-orange-200 shadow-2xs text-left">
+              <span class="block text-[11px] sm:text-xs font-black text-[#FC5200] leading-none">${runOnDay.distanceKm} km</span>
+              <span class="block text-[9px] font-semibold text-slate-500 mt-0.5 leading-none font-mono">${runOnDay.paceFormatted}</span>
+            </div>
+          `;
+        }
+
+        cell.innerHTML = `${topRow}`;
+        cell.onclick = () => {
+          selectedRunDateStr = key;
+          renderRunsCalendar();
+          renderRunsSelectedDayDetail();
+        };
+
+        grid.appendChild(cell);
+      }
+
+      renderRunsSelectedDayDetail();
+    }
+
+    function changeRunsMonth(delta) {
+      currentRunsDate.setMonth(currentRunsDate.getMonth() + delta);
+      renderRunsCalendar();
+    }
+
+    function goToCurrentRunsMonth() {
+      currentRunsDate = new Date();
+      selectedRunDateStr = formatDateKey(new Date());
+      renderRunsCalendar();
+    }
+
+    function renderRunsSelectedDayDetail() {
+      const container = document.getElementById('runs-selected-day-detail');
+      if (!container) return;
+
+      const run = (appData.runs || []).find(r => r.date === selectedRunDateStr);
+
+      if (!run) {
+        container.innerHTML = `
+          <div class="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center">
+            <p class="text-xs text-slate-500 font-medium">Dia ${formatDateBr(selectedRunDateStr)}: Nenhuma corrida realizada nesta data.</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Selecione no calendário acima um dia marcado com quilometragem.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="p-4 bg-gradient-to-r from-orange-50/90 via-white to-orange-50/50 border border-orange-200 rounded-2xl space-y-3 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-[#FC5200] text-white flex items-center justify-center font-black text-sm shadow-xs">🏃</div>
+              <div>
+                <h4 class="text-sm font-extrabold text-slate-900">${run.name || 'Corrida Amazfit T-Rex 3 Pro'}</h4>
+                <p class="text-[11px] text-slate-500 font-medium">${formatDateBr(run.date)} • Duração em movimento: <b>${run.timeFormatted}</b></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-orange-100 text-[#FC5200] border border-orange-200">Strava / Zepp</span>
+              <button onclick="deleteRunEntry('${run.id}')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="Excluir este treino de corrida">🗑️</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-orange-100 text-center">
+            <div class="bg-white p-2.5 rounded-xl border border-orange-100/90 shadow-2xs">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Distância</span>
+              <span class="text-base font-black text-slate-900">${run.distanceKm} km</span>
+            </div>
+            <div class="bg-white p-2.5 rounded-xl border border-orange-100/90 shadow-2xs">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Pace Médio</span>
+              <span class="text-base font-black text-[#FC5200]">${run.paceFormatted} /km</span>
+            </div>
+            <div class="bg-white p-2.5 rounded-xl border border-orange-100/90 shadow-2xs">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Frequência Cardíaca</span>
+              <span class="text-base font-black text-slate-800">${run.avgHeartRate || '-'} <span class="text-xs text-slate-400 font-normal">/ ${run.maxHeartRate || '-'} bpm</span></span>
+            </div>
+            <div class="bg-white p-2.5 rounded-xl border border-orange-100/90 shadow-2xs">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Altimetria Acumulada</span>
+              <span class="text-base font-black text-slate-800">+${run.elevationGain || 0}m</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+function renderRunsHistoryTab() {
+      renderRunsCalendar();
+      const runs = (appData.runs || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      const summaryCards = document.getElementById('runs-summary-cards');
+      const tbody = document.getElementById('runs-table-body');
+
+      if (!summaryCards || !tbody) return;
+
+      if (runs.length === 0) {
+        summaryCards.innerHTML = `
+          <div class="col-span-2 sm:col-span-4 p-6 bg-slate-50 rounded-xl text-center border border-dashed border-slate-200">
+            <p class="text-xs font-semibold text-slate-500">Nenhum treino de corrida registrado ainda.</p>
+            <p class="text-[11px] text-slate-400 mt-1">Clique em "Sincronizar Agora" para puxar as atividades do seu Amazfit T-Rex 3 Pro.</p>
+          </div>
+        `;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-slate-400 text-xs">Sem atividades.</td></tr>`;
+        if (runsChartInstance) { runsChartInstance.destroy(); runsChartInstance = null; }
+        return;
+      }
+
+      // Estatísticas gerais
+      const totalKm = runs.reduce((acc, r) => acc + (r.distanceKm || 0), 0).toFixed(1);
+      const totalRuns = runs.length;
+      const avgPaceSec = Math.round(runs.reduce((acc, r) => acc + (r.paceSeconds || 330), 0) / totalRuns);
+      const minPace = Math.floor(avgPaceSec / 60);
+      const secPace = String(avgPaceSec % 60).padStart(2, '0');
+      const avgPaceStr = `${minPace}'${secPace}"`;
+      const longestRun = Math.max(...runs.map(r => r.distanceKm || 0)).toFixed(1);
+
+      summaryCards.innerHTML = `
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">Distância Total</span>
+          <p class="text-lg font-black text-slate-900 mt-0.5">${totalKm} km</p>
+        </div>
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">Pace Médio Geral</span>
+          <p class="text-lg font-black text-orange-600 mt-0.5">${avgPaceStr} /km</p>
+        </div>
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">Total de Sessões</span>
+          <p class="text-lg font-black text-slate-900 mt-0.5">${totalRuns} treinos</p>
+        </div>
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/70">
+          <span class="text-[10px] uppercase font-bold text-slate-400">Maior Distância</span>
+          <p class="text-lg font-black text-emerald-600 mt-0.5">${longestRun} km</p>
+        </div>
+      `;
+
+      // Preenche tabela
+      tbody.innerHTML = '';
+      runs.slice().reverse().forEach(r => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="py-2.5 px-3 text-slate-600 font-semibold">${formatDateBr(r.date)}</td>
+          <td class="py-2.5 px-3 font-bold text-slate-900">${r.distanceKm} km</td>
+          <td class="py-2.5 px-3 text-slate-600 font-mono">${r.timeFormatted}</td>
+          <td class="py-2.5 px-3 font-bold text-orange-600">${r.paceFormatted} /km</td>
+          <td class="py-2.5 px-3 text-slate-700 font-medium">${r.avgHeartRate || '-'} / ${r.maxHeartRate || '-'} bpm</td>
+          <td class="py-2.5 px-3 text-slate-500 font-mono">+${r.elevationGain || 0}m</td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="deleteRunEntry('${r.id}')" class="text-rose-500 hover:text-rose-700 p-1 transition" title="Excluir corrida">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      // Gráfico de Corridas (Distância e Pace)
+      const labels = runs.map(r => {
+        const p = r.date.split('-');
+        return `${p[2]}/${p[1]}`;
+      });
+
+      const ctx = document.getElementById('chart-runs')?.getContext('2d');
+      if (!ctx) return;
+      if (runsChartInstance) runsChartInstance.destroy();
+
+      runsChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Distância (km)',
+              data: runs.map(r => r.distanceKm),
+              backgroundColor: 'rgba(252, 82, 0, 0.25)',
+              borderColor: '#FC5200',
+              borderWidth: 1.5,
+              borderRadius: 8,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: 'Pace (segundos/km)',
+              data: runs.map(r => r.paceSeconds),
+              borderColor: '#059669',
+              tension: 0.3,
+              pointRadius: 4,
+              borderWidth: 2,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (context.dataset.yAxisID === 'y1') {
+                    const sec = context.raw;
+                    const m = Math.floor(sec / 60);
+                    const s = String(sec % 60).padStart(2, '0');
+                    return `Pace: ${m}'${s}" /km`;
+                  }
+                  return `Distância: ${context.raw} km`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { position: 'left', title: { display: true, text: 'km' }, grid: { color: '#F1F5F9' } },
+            y1: { position: 'right', reverse: true, title: { display: true, text: 'Ritmo (mais rápido para cima)' }, grid: { display: false } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function openConfigModal() {
+      document.getElementById('sheets-webapp-url').value = localStorage.getItem(CONFIG_KEY) || '';
+      
+      
+      
+      
+      document.getElementById('modal-config').classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+      document.getElementById('modal-config').classList.add('hidden');
+    }
+
+    function saveSheetsConfig() {
+      const url = document.getElementById('sheets-webapp-url').value.trim();
+      localStorage.setItem(CONFIG_KEY, url);
+      
+      closeConfigModal();
+      showToast("Configurações do Google Sheets e Strava salvas com sucesso!");
+    }
+
+    async function postToGoogleSheets(payload) {
+      const endpoint = localStorage.getItem(CONFIG_KEY);
+      if (!endpoint) return false;
+
+      try {
+        await fetch(endpoint, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return true;
+      } catch (err) {
+        console.warn("Rede indisponível, guardando na fila", err);
+        return false;
+      }
+    }
+
+    async function queueOrSendSync(payload) {
+      if (!navigator.onLine) {
+        offlineQueue.push(payload);
+        saveOfflineQueue();
+        showToast("Offline: Ação gravada na fila local.");
+        return;
+      }
+
+      const success = await postToGoogleSheets(payload);
+      if (!success) {
+        offlineQueue.push(payload);
+        saveOfflineQueue();
+      }
+    }
+
+    async function processOfflineQueue() {
+      if (!navigator.onLine || offlineQueue.length === 0) return;
+      const endpoint = localStorage.getItem(CONFIG_KEY);
+      if (!endpoint) return;
+
+      showToast(`Processando ${offlineQueue.length} itens da fila offline...`);
+      const success = await postToGoogleSheets({
+        action: 'full_sync',
+        data: {
+          splits: appData.splits,
+          schedule: appData.schedule,
+          history: appData.history,
+          bioimpedance: appData.bioimpedance
+        }
+      });
+
+      if (success) {
+        offlineQueue = [];
+        saveOfflineQueue();
+        showToast("Fila offline sincronizada com sucesso!");
+      }
+    }
+
+    window.addEventListener('online', processOfflineQueue);
+
+    async function syncWithGoogleSheets() {
+      const endpoint = localStorage.getItem(CONFIG_KEY);
+      if (!endpoint) {
+        openConfigModal();
+        return;
+      }
+
+      const spinIcon = document.getElementById('sync-spin-icon');
+      if (spinIcon) spinIcon.classList.add('animate-spin');
+
+      showToast("Enviando treinos e bioimpedância...");
+      const success = await postToGoogleSheets({
+        action: 'full_sync',
+        data: {
+          splits: appData.splits,
+          schedule: appData.schedule,
+          history: appData.history,
+          bioimpedance: appData.bioimpedance
+        }
+      });
+
+      if (spinIcon) spinIcon.classList.remove('animate-spin');
+      if (success) {
+        offlineQueue = [];
+        saveOfflineQueue();
+        appData.lastAppSync = getFormattedTimestamp();
+        saveLocalData();
+        renderSidebarVersionInfo();
+        showToast("Base de dados sincronizada com sucesso!");
+      } else {
+        showToast("Sem conexão. Dados mantidos para envio posterior.", "error");
+      }
+    }
+
+    async function pullFromGoogleSheets() {
+      const endpoint = localStorage.getItem(CONFIG_KEY);
+      if (!endpoint) {
+        openConfigModal();
+        return;
+      }
+
+      const pullIcon = document.getElementById('pull-spin-icon');
+      if (pullIcon) pullIcon.classList.add('animate-spin');
+
+      showToast("Buscando dados da planilha...");
+
+      try {
+        const separator = endpoint.includes('?') ? '&' : '?';
+        const res = await fetch(`${endpoint}${separator}action=get_data`);
+        const result = await res.json();
+
+        if (result && result.status === 'success' && result.data) {
+          if (result.data.splits) appData.splits = result.data.splits;
+          if (result.data.schedule) appData.schedule = result.data.schedule;
+          if (result.data.history) appData.history = result.data.history;
+          if (result.data.bioimpedance) appData.bioimpedance = result.data.bioimpedance;
+
+          saveLocalData();
+          renderCalendar();
+          renderSelectedDayPanel();
+          renderWorkoutsTab();
+          renderEvolutionTab();
+          renderBioHistoryTab();
+          appData.lastAppSync = getFormattedTimestamp();
+          saveLocalData();
+          renderSidebarVersionInfo();
+          showToast("Dados baixados da planilha com sucesso!");
+        } else {
+          showToast("Resposta inesperada da planilha. Verifique o Apps Script.", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Falha ao puxar dados da planilha. Verifique a URL.", "error", err?.stack || err);
+      } finally {
+        if (pullIcon) pullIcon.classList.remove('animate-spin');
+      }
+    }
+
+    // ================= NAVEGAÇÃO =================
+    function switchView(viewName, optSplit = null) {
+      document.querySelectorAll('.nav-tab-bottom').forEach(btn => {
+        const v = btn.getAttribute('data-view');
+        const iconWrapper = btn.querySelector('.nav-icon-wrapper');
+        const label = btn.querySelector('.nav-label');
+
+        if (v === viewName) {
+          iconWrapper.className = 'nav-icon-wrapper w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-200 bg-emerald-50 text-emerald-600 shadow-xs ring-1 ring-emerald-500/20';
+          label.className = 'nav-label text-[10px] font-bold mt-1 text-emerald-700';
+        } else {
+          iconWrapper.className = 'nav-icon-wrapper w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-200 text-slate-400 group-hover:text-slate-600';
+          label.className = 'nav-label text-[10px] font-semibold mt-1 text-slate-400';
+        }
+      });
+
+      document.getElementById('view-calendar').classList.toggle('hidden', viewName !== 'calendar');
+      document.getElementById('view-routine').classList.toggle('hidden', viewName !== 'routine');
+      document.getElementById('view-workouts').classList.toggle('hidden', viewName !== 'workouts');
+      document.getElementById('view-evolution').classList.toggle('hidden', viewName !== 'evolution');
+      document.getElementById('view-bio-history').classList.toggle('hidden', viewName !== 'bio_history');
+      const runsSec = document.getElementById('view-runs-history');
+      if (runsSec) runsSec.classList.toggle('hidden', viewName !== 'runs_history');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (viewName === 'calendar') {
+        renderCalendar();
+        renderSelectedDayPanel();
+      } else if (viewName === 'routine') {
+        renderWeeklySchedule();
+      } else if (viewName === 'workouts') {
+        if (optSplit) activeSplitTab = optSplit;
+        renderWorkoutsTab();
+      } else if (viewName === 'evolution') {
+        renderEvolutionTab();
+      } else if (viewName === 'bio_history') {
+        renderBioHistoryTab();
+      } else if (viewName === 'runs_history') {
+        renderRunsHistoryTab();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const isAuth = sessionStorage.getItem('pulsefit_authenticated');
+      const loginScreen = document.getElementById('login-screen');
+      if (isAuth === 'true' && loginScreen) {
+        loginScreen.remove();
+      }
+
+      runSplashScreen();
+      updateQueueBadge();
+
+      document.querySelectorAll('.nav-tab-bottom').forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.getAttribute('data-view')));
+      });
+
+      document.querySelectorAll('.split-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const split = btn.getAttribute('data-split');
+          if (!appData.schedule[selectedDateStr]) {
+            appData.schedule[selectedDateStr] = { split: split, completed: false };
+          } else {
+            appData.schedule[selectedDateStr].split = split;
+          }
+          saveLocalData();
+          renderCalendar();
+          renderSelectedDayPanel();
+          showToast(`Dia vinculado ao Treino ${split}`);
+        });
+      });
+
+      document.querySelectorAll('.workout-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeSplitTab = btn.getAttribute('data-tab');
+          renderWorkoutsTab();
+        });
+      });
+
+      document.getElementById('split-title-input')?.addEventListener('input', (e) => {
+        if (appData.splits[activeSplitTab]) {
+          appData.splits[activeSplitTab].name = e.target.value;
+          saveLocalData();
+        }
+      });
+
+      renderCalendar();
+      renderSelectedDayPanel();
+    });
+  </script>
+</body>
+</html>

@@ -1537,9 +1537,9 @@ function deleteBioEntry(id) {
         if (dayPlan && dayPlan.split) {
           const split = dayPlan.split;
           if (split === 'OFF') {
-            badge = `<span class="text-[9px] font-extrabold px-1 py-0.5 rounded-md badge-OFF w-full text-center mt-1 block">OFF</span>`;
+            badge = `<span class="text-[9px] font-bold px-1 py-0.5 rounded-lg badge-OFF w-full text-center mt-1 block tracking-wider">OFF</span>`;
           } else {
-            badge = `<span class="text-[10px] font-black px-1 py-0.5 rounded-md badge-${split} w-full text-center mt-1 block">Tr. ${split}</span>`;
+            badge = `<span class="text-[11px] font-black px-1.5 py-0.5 rounded-lg badge-${split} w-full text-center mt-1 block shadow-2xs">${split}</span>`;
           }
         }
 
@@ -2534,7 +2534,7 @@ function renderRunsHistoryTab() {
       }
     }
 
-    async function pullFromGoogleSheets() {
+        async function pullFromGoogleSheets() {
       const endpoint = localStorage.getItem(CONFIG_KEY);
       if (!endpoint) {
         openConfigModal();
@@ -2566,7 +2566,7 @@ function renderRunsHistoryTab() {
           appData.lastAppSync = getFormattedTimestamp();
           saveLocalData();
           renderSidebarVersionInfo();
-          showToast("Dados baixados da planilha com sucesso!");
+          showToast("Dados e calendário baixados com sucesso da planilha!");
         } else {
           showToast("Resposta inesperada da planilha. Verifique o Apps Script.", "error");
         }
@@ -2574,10 +2574,11 @@ function renderRunsHistoryTab() {
         console.error(err);
         showToast("Falha ao puxar dados da planilha. Verifique a URL.", "error", err?.stack || err);
       } finally {
-        if (pullIcon) pullIcon.classList.remove('animate-spin');
+        if (pullIcon) pullIcon.classList.add('animate-spin');
       }
     }
 
+    
     // ================= NAVEGAÇÃO =================
     function switchView(viewName, optSplit = null) {
       document.querySelectorAll('.nav-tab-bottom').forEach(btn => {
@@ -2599,8 +2600,6 @@ function renderRunsHistoryTab() {
       document.getElementById('view-workouts').classList.toggle('hidden', viewName !== 'workouts');
       document.getElementById('view-evolution').classList.toggle('hidden', viewName !== 'evolution');
       document.getElementById('view-bio-history').classList.toggle('hidden', viewName !== 'bio_history');
-      const runsSec = document.getElementById('view-runs-history');
-      if (runsSec) runsSec.classList.toggle('hidden', viewName !== 'runs_history');
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -2616,8 +2615,6 @@ function renderRunsHistoryTab() {
         renderEvolutionTab();
       } else if (viewName === 'bio_history') {
         renderBioHistoryTab();
-      } else if (viewName === 'runs_history') {
-        renderRunsHistoryTab();
       }
     }
 

@@ -1467,6 +1467,7 @@ function deleteBioEntry(id) {
     }
 
     // ================= CALENDÁRIO =================
+    
     function renderCalendar() {
       const y = currentDate.getFullYear();
       const m = currentDate.getMonth();
@@ -1480,14 +1481,16 @@ function deleteBioEntry(id) {
       const prevDaysCount = new Date(y, m, 0).getDate();
       const todayStr = formatDateKey(new Date());
 
+      // Dias vazios do mês anterior
       for (let i = firstDay; i > 0; i--) {
         const d = prevDaysCount - i + 1;
         const cell = document.createElement('div');
-        cell.className = 'min-h-[64px] sm:min-h-[76px] p-1 rounded-xl border border-slate-100 bg-slate-50/40 text-slate-300 text-[11px] select-none';
-        cell.innerHTML = `<span>${d}</span>`;
+        cell.className = 'min-h-[72px] sm:min-h-[84px] p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30 text-slate-300 text-xs select-none flex flex-col justify-between';
+        cell.innerHTML = `<span class="font-bold opacity-40">${d}</span>`;
         grid.appendChild(cell);
       }
 
+      // Dias do mês atual
       for (let day = 1; day <= daysCount; day++) {
         const dStr = String(day).padStart(2, '0');
         const mStr = String(m + 1).padStart(2, '0');
@@ -1497,33 +1500,46 @@ function deleteBioEntry(id) {
         const isSelected = key === selectedDateStr;
         const dayPlan = appData.schedule[key];
 
+        // Verifica se o treino do dia foi totalmente realizado (100% das séries batidas)
+        let isFullyCompleted = false;
+        if (dayPlan && dayPlan.split && dayPlan.split !== 'OFF') {
+          const split = dayPlan.split;
+          const splitObj = appData.splits[split];
+          if (splitObj && splitObj.exercises && splitObj.exercises.length > 0) {
+            const totalRequiredSets = splitObj.exercises.reduce((acc, ex) => acc + (ex.sets || 0), 0);
+            const loggedSetsCount = appData.history.filter(h => h.date === key).length;
+            if (totalRequiredSets > 0 && loggedSetsCount >= totalRequiredSets) {
+              isFullyCompleted = true;
+            }
+          }
+        }
+
         const cell = document.createElement('div');
-        cell.className = `min-h-[64px] sm:min-h-[76px] p-1.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
-          isSelected 
-            ? 'border-emerald-500 bg-emerald-50/70 shadow-xs ring-2 ring-emerald-500/20' 
-            : isToday 
-              ? 'border-slate-300 bg-slate-50 hover:bg-slate-100' 
-              : 'border-slate-200/80 bg-white hover:border-slate-300'
+        cell.className = `min-h-[72px] sm:min-h-[84px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
+          isFullyCompleted
+            ? 'border-emerald-400 bg-emerald-50/90 shadow-xs ring-1 ring-emerald-400/30'
+            : isSelected 
+              ? 'border-emerald-600 bg-emerald-50/60 shadow-sm ring-2 ring-emerald-500/25' 
+              : isToday 
+                ? 'border-slate-400 bg-slate-50/90 hover:bg-slate-100' 
+                : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/50'
         }`;
 
         let topRow = `
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold ${isToday ? 'w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center -ml-0.5' : isSelected ? 'text-emerald-700' : 'text-slate-700'}">${day}</span>
-            ${dayPlan?.completed ? '<span class="text-[10px] text-emerald-600 font-bold">✓</span>' : ''}
+            <span class="text-xs font-extrabold ${isToday ? 'w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center -ml-0.5 shadow-xs' : isSelected ? 'text-emerald-800 font-black' : 'text-slate-800'}">${day}</span>
+            ${isFullyCompleted ? '<span class="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shadow-xs" title="Treino 100% Realizado">✓</span>' : (dayPlan?.completed ? '<span class="text-[10px] text-emerald-600 font-bold">✓</span>' : '')}
           </div>
         `;
 
         let badge = '';
         if (dayPlan && dayPlan.split) {
           const split = dayPlan.split;
-          badge = `<span class="text-[9px] font-bold px-1 py-0.5 rounded badge-${split} w-full text-center truncate mt-1 block">${split === 'OFF' ? 'OFF' : `Tr. ${split}`}</span>`;
-        }
-
-        // Verifica se houve corrida no dia (Amazfit / Strava)
-        let runBadge = '';
-        const runOnDay = (appData.runs || []).find(r => r.date === key);
-        if (runOnDay) {
-          runBadge = `<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-orange-100 text-[#FC5200] border border-orange-200 self-start mt-0.5 flex items-center gap-0.5">🏃 ${runOnDay.distanceKm}k • ${runOnDay.paceFormatted}</span>`;
+          if (split === 'OFF') {
+            badge = `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-lg badge-OFF w-full text-center truncate mt-1 block shadow-2xs">OFF</span>`;
+          } else {
+            badge = `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-lg badge-${split} w-full text-center truncate mt-1 block shadow-2xs">Treino ${split}</span>`;
+          }
         }
 
         cell.innerHTML = `${topRow}${badge}`;
@@ -1778,6 +1794,15 @@ function deleteBioEntry(id) {
       renderCalendar();
       renderSelectedDayPanel();
       showToast("Rotina semanal vinculada a todos os dias do mês!");
+      queueOrSendSync({
+        action: 'full_sync',
+        data: {
+          splits: appData.splits,
+          schedule: appData.schedule,
+          history: appData.history,
+          bioimpedance: appData.bioimpedance
+        }
+      });
     }
 
     // ================= MONTAGEM DE TREINOS =================
@@ -2621,6 +2646,15 @@ function renderRunsHistoryTab() {
           renderCalendar();
           renderSelectedDayPanel();
           showToast(`Dia vinculado ao Treino ${split}`);
+          queueOrSendSync({
+            action: 'full_sync',
+            data: {
+              splits: appData.splits,
+              schedule: appData.schedule,
+              history: appData.history,
+              bioimpedance: appData.bioimpedance
+            }
+          });
         });
       });
 
